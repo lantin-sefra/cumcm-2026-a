@@ -26,7 +26,7 @@
            & \verb|problem1.py|      & 问题一预热段求解与报表 \\
            & \verb|problem2.py|      & 问题二全程变物性求解与报表 \\
            & \verb|problem3.py|      & 问题三达标时长求解与报表 \\
-           & \verb|problem4.py|      & 问题四收缩域求解、效应隔离与干物质核算 \\
+           & \verb|problem4.py|      & 问题四物质坐标求解、$2\times2$ 因子与干物质核算 \\
            & \verb|master_p23.py|    & 问题二、三共用的主求解流程 \\
            & \verb|validate.py|      & 守恒、收敛、级数解对照与极限退化检验 \\
            & \verb|io_out.py|        & 报表与工作簿写出 \\
@@ -35,9 +35,10 @@
   \midrule
   计算结果 & \verb|result1.xlsx|     & 问题一温度与水分浓度全网格结果 \\
            & \verb|result2.xlsx|     & 问题二全烘干过程双表结果 \\
-           & \verb|result3.xlsx|     & 问题三 $0\to t_{\rm end}$ 结果 \\
+           & \verb|result3.xlsx|     & 问题三 $60\,\mathrm{s}\to t_{\rm end}$ 结果 \\
            & \verb|result4.xlsx|     & 问题四收缩域结果 \\
-           & \verb|effect_isolation.csv| & 情景 S0--S4 达标时长 \\
+           & \verb|effect_isolation.csv| & Lagrangian/Eulerian $2\times2$ 时长 \\
+           & \verb|shrinkage_beta.csv| & 体积收缩系数反演 \\
            & \verb|mass_consistency.csv| & 干物质守恒诊断 \\
            & \verb|sensitivity.csv|  & 单因子灵敏度记录 \\
            & \verb|validation.json|  & 数值可信度检验记录 \\

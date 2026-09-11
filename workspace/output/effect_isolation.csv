@@ -1,13 +1,34 @@
-﻿scenario,description,appendix,domain,R_cm,chi,role,t_end_h,reached,mass_resid_rel
-S0,问题3基线（附录3，固定R=2cm）,3,固定,2.0000,n.a.,deliverable,56.7087,True,2.081e-15
-S1,仅换物性（附录4，固定R=2cm）,4,固定,2.0000,n.a.,control,128.5937,True,1.974e-15
-S2,换物性+收缩（主用，χ=0）,4,R(t),,0,deliverable,52.1896,True,7.515e-16
-S3,换物性+收缩（替代闭合，χ=1）,4,R(t),,1,control,50.6940,True,2.005e-16
-S4,末态半径界（附录4，固定R=1.198cm）,4,固定,1.1980,n.a.,control,47.4146,True,5.348e-15
+﻿scenario,description,appendix,domain,R_cm,frame,role,t_end_h,reached,mass_resid_rel
+L00,附录3 + 固定R（Lagrangian）,3,固定,2.0000,lagrange,control,56.9740,True,3.616e-14
+L10,附录4 + 固定R（Lagrangian）,4,固定,2.0000,lagrange,control,128.9063,True,6.704e-14
+L01,附录3 + 收缩R(t)（Lagrangian）,3,R(t),,lagrange,control,25.0882,True,1.861e-14
+L11,附录4 + 收缩R(t)（主用 Lagrangian）,4,R(t),,lagrange,deliverable,50.7803,True,4.304e-14
+E00,附录3 + 固定R（Eulerian）,3,固定,2.0000,landau,control,56.7087,True,3.600e-15
+E10,附录4 + 固定R（Eulerian）,4,固定,2.0000,landau,control,128.5937,True,2.202e-15
+E01,附录3 + 收缩R(t)（Eulerian χ=0）,3,R(t),,landau,control,25.7728,True,2.950e-15
+E11,附录4 + 收缩R(t)（Eulerian χ=0 交叉验证）,4,R(t),,landau,control,52.1896,True,3.435e-15
 
-# 效应分解 式(24): t_S2-t_S0 = (t_S1-t_S0)+(t_S2-t_S1)
-component,value_h
-换物性(t_S1-t_S0),71.8850
-加收缩(t_S2-t_S1),-76.4041
-净差(t_S2-t_S0),-4.5191
-加性恒等残差,7.11e-15
+# Lagrangian 2x2 因子设计（交付分解）
+quantity,value_h
+t00 附录3+固定,56.9740
+t10 附录4+固定,128.9063
+t01 附录3+收缩,25.0882
+t11 附录4+收缩（交付）,50.7803
+交互项 I=t11-t10-t01+t00,-46.2401
+物性 Shapley,48.8122
+收缩 Shapley,-55.0059
+净差 t11-t00,-6.1937
+路径A 先换物性,71.9322
+路径A 再加收缩,-78.1260
+路径B 先加收缩,-31.8859
+路径B 再换物性,25.6921
+
+# Eulerian 2x2（交叉对照，非交付）
+E t00,56.7087
+E t10,128.5937
+E t01,25.7728
+E t11 χ=0,52.1896
+E 交互项 I,-45.4682
+E 物性 Shapley,49.1509
+E 收缩 Shapley,-53.6700
+Lagrangian vs Eulerian 相对差,2.78%

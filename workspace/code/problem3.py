@@ -2,7 +2,7 @@
 
 模型与问题2 完全相同，只加终止事件 t_end=min{t:max_r C<0.15}（式17，逐点最大值）。
 表5 行 6,12,18,… h + 末行「烘干结束时间」× r∈{0,0.5,1,1.5,2} cm 浓度；
-result3.xlsx 单表 A 列步长 60 s 覆盖 0→t_end，21 距离列。
+result3.xlsx 单表 A 列步长 60 s 覆盖 60s→t_end（不含 t=0，与附件3 模板一致），21 距离列。
 """
 from __future__ import annotations
 
@@ -52,11 +52,11 @@ def solve(res=None, write=True):
             corner="水分浓度(kg/kg)  时间(h)\\距离(cm)",
             extra_last_row=(f"烘干结束时间 {t_end_s/P.SEC_PER_HOUR:.3f}h", C_end))
 
-        # result3.xlsx：60 s 子采样至 t_end（含末行 t_end 附近最后 60 s 网格点）
+        # result3.xlsx：60 s 子采样；模板从 t=60s 起、工作表名 Sheet1
         step = int(round(P.P34_SAVE_DT_S / P.P2_SAVE_DT_S))   # 60
         mask_idx = np.arange(0, res["t"].size, step)
         tt = res["t"][mask_idx]
-        keep = tt <= t_end_s + 1e-6
+        keep = (tt >= P.P34_SAVE_DT_S - 1e-9) & (tt <= t_end_s + 1e-6)
         IO.write_result_xlsx(P.OUTPUT_DIR / "result3.xlsx",
                              {"Sheet1": res["Ccol"][mask_idx][keep]},
                              tt[keep])

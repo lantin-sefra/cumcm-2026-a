@@ -127,28 +127,42 @@ def run_p3():
 
 
 def run_p4():
-    for name, chi, tag in (('S2', P.CHI_PRIMARY, 'p4s2'), ('S3', P.CHI_ALT, 'p4s3')):
-        geom = geometry.MovingGeometry()
-        cfg = D.CaseConfig(name=name, appendix=4, geom=geom, chi=chi,
-                           dt_policy='seg', save_dt_s=P.P34_SAVE_DT_S,
-                           t_max_s=P.T_END_MAX_S, detect_end=True,
-                           store_nodes=(tag == 'p4s2'))
-        res = D.run(cfg)
-        payload = dict(t=res['t'], maxC=res['maxC'], R_m=res['R'],
-                       Ccenter=res['Ccenter'], Csurf=res['Csurf'],
-                       Tcenter=res['Tcenter'], Tsurf=res['Tsurf'],
-                       cols_cm=np.asarray(P.DIST_COLS_CM),
-                       Ccol=res['Ccol'], Tcol=res['Tcol'],
-                       t_end_s=res['t_end_s'], t_end_h=res['t_end_h'],
-                       mass_resid_rel=res['mass_resid_rel'])
-        if tag == 'p4s2':
-            payload['nodesC'] = res['nodesC']
-            payload['nodesT'] = res['nodesT']
-            payload['Cbar'] = _vol_mean(res['nodesC'], res['N'])
-            payload['N'] = res['N']
-        np.savez_compressed(os.path.join(OUT, '%s.npz' % tag), **payload)
-        _log('p4 %s done: nt=%d  t_end=%.4f h  R_end=%.4f cm'
-             % (name, res['t'].size, res['t_end_h'], res['R'][-1] / P.CM_TO_M))
+    geom = geometry.MovingGeometry()
+    cfgL = D.CaseConfig(name='L11', appendix=4, geom=geom, frame='lagrange',
+                        dt_policy='seg', save_dt_s=P.P34_SAVE_DT_S,
+                        t_max_s=P.T_END_MAX_S, detect_end=True, store_nodes=True)
+    res = D.run(cfgL)
+    N = res['N']
+    w = np.full(N + 1, 1.0 / N)
+    w[0] = w[-1] = 0.5 / N
+    payload = dict(t=res['t'], maxC=res['maxC'], R_m=res['R'],
+                   Ccenter=res['Ccenter'], Csurf=res['Csurf'],
+                   Tcenter=res['Tcenter'], Tsurf=res['Tsurf'],
+                   cols_cm=np.asarray(P.DIST_COLS_CM),
+                   Ccol=res['Ccol'], Tcol=res['Tcol'],
+                   t_end_s=res['t_end_s'], t_end_h=res['t_end_h'],
+                   mass_resid_rel=res['mass_resid_rel'],
+                   nodesC=res['nodesC'], nodesT=res['nodesT'],
+                   Cbar=res['nodesC'] @ (w / w.sum()), N=N)
+    np.savez_compressed(os.path.join(OUT, 'p4s2.npz'), **payload)
+    _log('p4 L11 done: nt=%d  t_end=%.4f h  R_end=%.4f cm'
+         % (res['t'].size, res['t_end_h'], res['R'][-1] / P.CM_TO_M))
+
+    cfgE = D.CaseConfig(name='E11', appendix=4, geom=geometry.MovingGeometry(),
+                        frame='landau', chi=0, dt_policy='seg',
+                        save_dt_s=P.P34_SAVE_DT_S, t_max_s=P.T_END_MAX_S,
+                        detect_end=True, store_nodes=False)
+    rE = D.run(cfgE)
+    np.savez_compressed(
+        os.path.join(OUT, 'p4s3.npz'),
+        t=rE['t'], maxC=rE['maxC'], R_m=rE['R'],
+        Ccenter=rE['Ccenter'], Csurf=rE['Csurf'],
+        Tcenter=rE['Tcenter'], Tsurf=rE['Tsurf'],
+        cols_cm=np.asarray(P.DIST_COLS_CM),
+        Ccol=rE['Ccol'], Tcol=rE['Tcol'],
+        t_end_s=rE['t_end_s'], t_end_h=rE['t_end_h'],
+        mass_resid_rel=rE['mass_resid_rel'])
+    _log('p4 E11 done: nt=%d  t_end=%.4f h' % (rE['t'].size, rE['t_end_h']))
 
 
 def run_conv():

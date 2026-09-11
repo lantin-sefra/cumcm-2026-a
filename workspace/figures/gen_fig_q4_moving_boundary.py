@@ -16,14 +16,14 @@ nodesC = d['nodesC']
 N = int(d['N'])
 t_end = float(d['t_end_h'])
 
-# 归一化节点 ξ（与 code/fvm.make_grid 一致：均匀 N+1 点，含中心 0 与表面 1）
-xi = np.linspace(0.0, 1.0, N + 1)
+# 物质坐标 η=(r/R)² 均匀，物理半径 r=R√η
+eta = np.linspace(0.0, 1.0, N + 1)
 
 # 物理网格上插值到固定 r 栅格（域外留 NaN，不外推）
 r_grid = np.linspace(0.0, 2.0, 121)
 Z = np.full((r_grid.size, t_h.size), np.nan)
 for j in range(t_h.size):
-    rr = xi * R_cm[j]
+    rr = np.sqrt(eta) * R_cm[j]
     Z[:, j] = np.where(r_grid <= R_cm[j],
                        np.interp(r_grid, rr, nodesC[j], left=np.nan,
                                  right=np.nan),

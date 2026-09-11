@@ -13,7 +13,7 @@ d = load('p4s2')
 t_h = d['t'] / SEC_PER_HOUR
 R_cm = d['R_m'] / 1e-2
 N = int(d['N'])
-xi = np.linspace(0.0, 1.0, N + 1)
+eta = np.linspace(0.0, 1.0, N + 1)
 t_end = float(d['t_end_h'])
 
 stages = [(0.0, 12.0, '(a)'), (12.0, 36.0, '(b)'), (36.0, t_end, '(c)')]
@@ -27,7 +27,7 @@ for j, (h0, h1, tag) in enumerate(stages):
     cols = seq_colors(len(hs), 'blue')
     for m, hh in enumerate(hs):
         i = nearest_idx(t_h, hh)
-        ax.plot(xi * R_cm[i], d['nodesC'][i], color=cols[m], lw=1.3,
+        ax.plot(np.sqrt(eta) * R_cm[i], d['nodesC'][i], color=cols[m], lw=1.3,
                 marker=M[m % len(M)], ms=2.6, markevery=(m, 8),
                 label='%.1f h' % hh if j == 0 else None)
         ax.plot([R_cm[i]], [d['nodesC'][i][-1]], marker='|', ms=5.0,

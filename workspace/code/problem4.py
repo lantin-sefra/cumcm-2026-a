@@ -1,13 +1,12 @@
-"""问题4：附录4 + 移动边界收缩域 + 四情景效应隔离（MODELING_REPORT §7）。
+"""问题4：附录4 + 收缩移动边界。
 
-主用情景 S2（附录4、R(t) 收缩、χ=0 含 Landau 对流项）给出交付时长与表6/result4；
-效应隔离 S0–S4 在同一离散/环境/判据下运行，得式(24) 的加性分解（K19、H24）：
-    t_S2 − t_S0 = (t_S1 − t_S0) + (t_S2 − t_S1)   ——「换物性」+「加收缩」两项。
-⛔ S1（附录4 固定 R=2cm）为人为对照、物理不自洽（附录4 描述会收缩的药材），
-   role='control'、不受 K9/K10 约束、不作交付（§7.6）。
-⛔ 表6 末列是「药材表面」r=R(t)（非固定 2cm），域外 r>R(t) 置空（式26，§7.7）。
-INC1：附录4 的 ρ(C) 与附件2 的 R(t) 在严格干物质守恒下差 13.42%，仅作诊断量
-   （mass_consistency.csv），不作收敛判据、不修正实测半径（§7.3）。
+主用：Lagrangian 干基质量坐标 s=∫ ρ_d r dr（仿射收缩 r=R(t)√(s/S)），交付时长与表6/result4。
+交叉验证：Eulerian Landau ξ=r/R(t)、χ=0（含表观对流项）。
+2×2 因子设计（同一 Lagrangian 核）：
+    t00 附录3+固定R， t10 附录4+固定R， t01 附录3+收缩， t11 附录4+收缩（交付）。
+交互项 I = t11 - t10 - t01 + t00；物性/收缩贡献取两条路径的 Shapley 平均。
+Eulerian 补算 t01 仅作交叉对照，不参与交付。
+INC1：附录4 ρ(C) 与附件2 R(t) 在严格干物质守恒下不相容，只作诊断。
 """
 from __future__ import annotations
 
@@ -21,13 +20,12 @@ import driver as D
 import io_out as IO
 import props as PR
 
-REPORT_RADII = P.P34_REPORT_RADII_CM               # [0,0.5,1,1.5,2] cm
-_COLIDX = [P.DIST_COLS_CM.index(round(r, 4)) for r in REPORT_RADII]   # 0,5,10,15,20
+REPORT_RADII = P.P34_REPORT_RADII_CM
+_COLIDX = [P.DIST_COLS_CM.index(round(r, 4)) for r in REPORT_RADII]
 SURF_LABEL = "药材表面"
 
 
 def _row_labels_6h(t_end_s):
-    """6,12,… h（<t_end 的整数倍 6h）时刻列表（秒），与问题3 一致。"""
     out = []
     k = 1
     while k * P.P34_REPORT_DT_H * P.SEC_PER_HOUR < t_end_s:
@@ -36,51 +34,73 @@ def _row_labels_6h(t_end_s):
     return out
 
 
-def _run(name, appendix, geom, chi, t_max_s, role="deliverable", store_nodes=False):
-    """统一以交付离散（N=40、seg 步长、60 s 输出）推进一个情景。"""
+def _run(name, appendix, geom, *, frame="lagrange", chi=0, t_max_s=None,
+         role="deliverable", store_nodes=False):
+    if t_max_s is None:
+        t_max_s = P.T_END_MAX_S
     cfg = D.CaseConfig(name=name, appendix=appendix, geom=geom, chi=chi,
-                       dt_policy="seg", save_dt_s=P.P34_SAVE_DT_S,
+                       frame=frame, dt_policy="seg", save_dt_s=P.P34_SAVE_DT_S,
                        t_max_s=t_max_s, detect_end=True, role=role,
                        store_nodes=store_nodes)
     return D.run(cfg)
 
 
 def _surf_at(res, t_query_s):
-    """在快照时间轴上线性插值「药材表面」ξ=1 浓度（末行「烘干结束时间」用）。"""
     return float(np.interp(t_query_s, res["t"], res["Csurf"]))
 
 
+def _shapley(t00, t10, t01, t11):
+    """两条路径的平均贡献（Shapley）与交互项。"""
+    I = t11 - t10 - t01 + t00
+    prop = 0.5 * ((t10 - t00) + (t11 - t01))
+    shrink = 0.5 * ((t01 - t00) + (t11 - t10))
+    net = t11 - t00
+    return {
+        "t00": t00, "t10": t10, "t01": t01, "t11": t11,
+        "interaction_h": I,
+        "prop_shapley_h": prop,
+        "shrink_shapley_h": shrink,
+        "net_h": net,
+        "path_prop_then_shrink": (t10 - t00, t11 - t10),
+        "path_shrink_then_prop": (t01 - t00, t11 - t01),
+    }
+
+
 def solve(write=True):
-    # ---- 主用 S2：附录4 + R(t) + χ=0，保存全节点供表6/result4 ----
-    res = _run("S2", 4, geometry.MovingGeometry(), P.CHI_PRIMARY,
-               P.T_END_MAX_S, role="deliverable", store_nodes=True)
+    moving = geometry.MovingGeometry()
+    fixed0 = geometry.FixedGeometry(P.R0_M)
+    tmax_slow = 150.0 * P.SEC_PER_HOUR
+
+    # ---- 主用：Lagrangian + 附录4 + R(t) ----
+    res = _run("L11", 4, moving, frame="lagrange",
+               role="deliverable", store_nodes=True)
     if not res["reached"]:
-        raise RuntimeError("问题4 主用情景 S2 未在 120 h 内达标（按 §13.3 自查 E1–E10）")
+        raise RuntimeError("问题4 Lagrangian 主用情景未在 120 h 内达标")
     t_end_s = res["t_end_s"]
 
-    # ---- 效应隔离其余情景（S0/S1/S3/S4）----
-    r_s0 = _run("S0", 3, geometry.FixedGeometry(P.R0_M), 0, P.T_END_MAX_S)
-    r_s1 = _run("S1", 4, geometry.FixedGeometry(P.R0_M), 0, 150.0 * P.SEC_PER_HOUR,
-                role="control")                         # 对照，需 >120h 才达标
-    r_s3 = _run("S3", 4, geometry.MovingGeometry(), P.CHI_ALT, P.T_END_MAX_S)
-    r_s4 = _run("S4", 4, geometry.FixedGeometry(P.R_END_M), 0, P.T_END_MAX_S)
+    # ---- Lagrangian 2×2 其余三格 ----
+    r_l00 = _run("L00", 3, fixed0, frame="lagrange")
+    r_l10 = _run("L10", 4, fixed0, frame="lagrange", t_max_s=tmax_slow,
+                 role="control")
+    r_l01 = _run("L01", 3, moving, frame="lagrange")
 
-    scen = [
-        ("S0", "问题3基线（附录3，固定R=2cm）", 3, "固定", P.R0_CM, "n.a.", "deliverable", r_s0),
-        ("S1", "仅换物性（附录4，固定R=2cm）", 4, "固定", P.R0_CM, "n.a.", "control", r_s1),
-        ("S2", "换物性+收缩（主用，χ=0）", 4, "R(t)", np.nan, 0, "deliverable", res),
-        ("S3", "换物性+收缩（替代闭合，χ=1）", 4, "R(t)", np.nan, 1, "control", r_s3),
-        ("S4", "末态半径界（附录4，固定R=1.198cm）", 4, "固定", P.R_END_CM, "n.a.", "control", r_s4),
-    ]
-    tS0, tS1, tS2, tS3 = (r_s0["t_end_h"], r_s1["t_end_h"],
-                          res["t_end_h"], r_s3["t_end_h"])
-    prop_h = tS1 - tS0                                  # 换物性效应
-    shrink_h = tS2 - tS1                                # 加收缩效应
-    net_h = tS2 - tS0                                   # 净差（问4−问3）
-    chi_diff_h = tS3 - tS2
-    chi_diff_rel = chi_diff_h / tS2
+    # ---- Eulerian Landau 交叉验证（χ=0）+ 补齐 Eulerian t01 ----
+    r_e11 = _run("E11", 4, moving, frame="landau", chi=P.CHI_PRIMARY,
+                 role="control")
+    r_e01 = _run("E01", 3, moving, frame="landau", chi=P.CHI_PRIMARY,
+                 role="control")
+    r_e00 = _run("E00", 3, fixed0, frame="landau", chi=0)
+    r_e10 = _run("E10", 4, fixed0, frame="landau", chi=0, t_max_s=tmax_slow,
+                 role="control")
 
-    # ---- INC1 质量自洽诊断（式24，附录4）----
+    tL = _shapley(r_l00["t_end_h"], r_l10["t_end_h"],
+                  r_l01["t_end_h"], res["t_end_h"])
+    tE = _shapley(r_e00["t_end_h"], r_e10["t_end_h"],
+                  r_e01["t_end_h"], r_e11["t_end_h"])
+
+    cross_rel = (r_e11["t_end_h"] - res["t_end_h"]) / res["t_end_h"]
+
+    # ---- INC1 干物质自洽诊断 ----
     rs_C0 = float(PR.rho_s_eff(4, np.array([P.C0]))[0])
     rs_Cth = float(PR.rho_s_eff(4, np.array([P.C_TH]))[0])
     ratio_actual = rs_Cth / rs_C0
@@ -88,18 +108,24 @@ def solve(write=True):
     R_consistent = P.R0_CM / np.sqrt(ratio_actual)
     inc1_rel = (ratio_req - ratio_actual) / ratio_req
 
+    # 体积收缩系数反演 β(t)=( (R/R0)^2 - 1 ) / (C̄ - C0)，C̄ 为干基质量加权
+    beta_series = _shrinkage_beta(res)
+
     if write:
         _write_table6(res, t_end_s)
         _write_result4(res, t_end_s)
-        _write_effect_isolation(scen, prop_h, shrink_h, net_h)
+        _write_factorial(tL, tE, res, r_e11, r_l00, r_l10, r_l01,
+                         r_e00, r_e10, r_e01, cross_rel)
         _write_mass_consistency(rs_C0, rs_Cth, ratio_actual, ratio_req,
                                 R_consistent, inc1_rel)
+        _write_beta(beta_series)
 
     summary = {
         "problem": 4, "appendix": 4, "N": res["N"], "dt_s": "seg(2→4)",
-        "chi_primary": P.CHI_PRIMARY,
-        "t_end_h": tS2, "t_end_s": t_end_s,
-        "t_end_label": f"S2 χ=0, N={res['N']}, Δt=seg(2→4)s → t_end={tS2:.3f} h",
+        "frame_primary": "lagrange",
+        "t_end_h": res["t_end_h"], "t_end_s": t_end_s,
+        "t_end_label": (f"Lagrangian N={res['N']}, Δt=seg(2→4)s "
+                        f"→ t_end={res['t_end_h']:.4f} h"),
         "maxC_at_end": float(res["maxC"][int(np.argmin(np.abs(res["t"] - t_end_s)))]),
         "radius_frozen": res["radius_frozen"],
         "R_at_end_cm": float(np.interp(t_end_s, res["t"], res["R"])) / P.CM_TO_M,
@@ -107,36 +133,92 @@ def solve(write=True):
         "picard_iters_max": res["picard_iters_max"],
         "picard_nonconv": res["picard_nonconv"],
         "floor_trunc_steps": res["floor_trunc_steps"],
-        "effect_isolation": {
-            "t_S0_h": tS0, "t_S1_h": tS1, "t_S2_h": tS2, "t_S3_h": tS3,
-            "t_S4_h": r_s4["t_end_h"],
-            "prop_swap_h": prop_h, "shrink_h": shrink_h, "net_h": net_h,
-            "identity_lhs": net_h, "identity_rhs": prop_h + shrink_h,
-            "identity_resid_h": abs(net_h - (prop_h + shrink_h)),
+        "lagrange_2x2": tL,
+        "euler_2x2": tE,
+        "crosscheck": {
+            "euler_chi0_h": r_e11["t_end_h"],
+            "lagrange_h": res["t_end_h"],
+            "diff_h": r_e11["t_end_h"] - res["t_end_h"],
+            "diff_rel": cross_rel,
         },
-        "chi_closure": {"S2_chi0_h": tS2, "S3_chi1_h": tS3,
-                        "diff_h": chi_diff_h, "diff_rel": chi_diff_rel},
+        # 兼容旧字段名，供 main/validate/旧图脚本读取
+        "chi_primary": "n.a.(lagrange)",
+        "effect_isolation": {
+            "t_S0_h": tL["t00"], "t_S1_h": tL["t10"],
+            "t_S2_h": tL["t11"], "t_S3_h": r_e11["t_end_h"],
+            "t_S4_h": None,
+            "t_01_h": tL["t01"],
+            "prop_swap_h": tL["prop_shapley_h"],
+            "shrink_h": tL["shrink_shapley_h"],
+            "net_h": tL["net_h"],
+            "interaction_h": tL["interaction_h"],
+            "identity_lhs": tL["net_h"],
+            "identity_rhs": tL["prop_shapley_h"] + tL["shrink_shapley_h"],
+            "identity_resid_h": abs(tL["net_h"]
+                                    - (tL["prop_shapley_h"] + tL["shrink_shapley_h"])),
+        },
+        "chi_closure": {
+            "S2_chi0_h": r_e11["t_end_h"],
+            "S3_chi1_h": res["t_end_h"],
+            "diff_h": r_e11["t_end_h"] - res["t_end_h"],
+            "diff_rel": cross_rel,
+        },
         "inc1": {"ratio_actual": ratio_actual, "ratio_required": ratio_req,
                  "rel_diff": inc1_rel, "R_consistent_cm": R_consistent,
                  "R_measured_end_cm": P.R_END_CM},
+        "shrinkage_beta": beta_series,
         "report_times_h": [t / P.SEC_PER_HOUR for t in _row_labels_6h(t_end_s)],
         "report_radii_cm": list(REPORT_RADII),
     }
     return res, summary
 
 
+def _shrinkage_beta(res):
+    """由实测 R(t) 与干基质量加权含水率反演体积收缩系数，证伪线性收缩律。"""
+    R = np.asarray(res["R"])
+    t = np.asarray(res["t"])
+    Cbar = np.asarray(res["Ccenter"]) * np.nan  # placeholder length
+    # 干基质量加权：节点均匀 s 网格上 C 的 Vt 加权；无节点场时退回 (Ccenter+Csurf)/2
+    if "nodesC" in res:
+        nodes = np.asarray(res["nodesC"])
+        N = nodes.shape[1] - 1
+        ds = 1.0 / N
+        w = np.full(N + 1, ds)
+        w[0] = w[-1] = 0.5 * ds
+        w = w / w.sum()
+        Cbar = nodes @ w
+    else:
+        Cbar = 0.5 * (np.asarray(res["Ccenter"]) + np.asarray(res["Csurf"]))
+    Vratio = (R / P.R0_M) ** 2
+    dC = Cbar - P.C0
+    beta = np.full_like(Cbar, np.nan, dtype=float)
+    mask = np.abs(dC) > 1e-4
+    beta[mask] = (Vratio[mask] - 1.0) / dC[mask]
+    finite = beta[np.isfinite(beta)]
+    return {
+        "t_h": (t / P.SEC_PER_HOUR).tolist(),
+        "Cbar": Cbar.tolist(),
+        "V_over_V0": Vratio.tolist(),
+        "beta": beta.tolist(),
+        "beta_mean": float(np.mean(finite)) if finite.size else None,
+        "beta_std": float(np.std(finite)) if finite.size else None,
+        "beta_cv": (float(np.std(finite) / np.mean(finite))
+                    if finite.size and np.mean(finite) != 0 else None),
+        "linear_rejected": bool(finite.size and
+                                (np.std(finite) > 0.15 * abs(np.mean(finite)))),
+    }
+
+
 def _write_table6(res, t_end_s):
-    """表6：6h 行 + 末行「烘干结束时间」；列 = 5 固定半径 + 「药材表面」。"""
     times6 = _row_labels_6h(t_end_s)
     rows = []
     for tq in times6:
         j = int(np.argmin(np.abs(res["t"] - tq)))
-        vals = [res["Ccol"][j, ci] for ci in _COLIDX]     # NaN→置空（式26）
-        vals.append(float(res["Csurf"][j]))               # 药材表面 ξ=1
+        vals = [res["Ccol"][j, ci] for ci in _COLIDX]
+        vals.append(float(res["Csurf"][j]))
         rows.append(vals)
     end_fixed = D.field_at_time(res, t_end_s, "C")[_COLIDX]
     end_row = list(end_fixed) + [_surf_at(res, t_end_s)]
-
     col_labels = [f"{r:g}" for r in REPORT_RADII] + [SURF_LABEL]
     row_lbls = [f"{int(round(t / P.SEC_PER_HOUR))}" for t in times6]
     IO.write_table_csv(
@@ -147,37 +229,72 @@ def _write_table6(res, t_end_s):
 
 
 def _write_result4(res, t_end_s):
-    """result4.xlsx：A 列 60 s；21 固定距离列 + 末列「药材表面」；域外置空。"""
+    """result4.xlsx：模板工作表名 Sheet1；A 列从 60s 起；末列药材表面；域外空白。"""
     keep = (res["t"] >= P.P34_SAVE_DT_S - 1e-9) & (res["t"] <= t_end_s + 1e-6)
     arr = np.column_stack([res["Ccol"][keep], res["Csurf"][keep]])
     IO.write_result_xlsx(P.OUTPUT_DIR / "result4.xlsx",
-                         {"水分浓度": arr}, res["t"][keep], last_label=SURF_LABEL)
+                         {"Sheet1": arr}, res["t"][keep], last_label=SURF_LABEL)
 
 
-def _write_effect_isolation(scen, prop_h, shrink_h, net_h):
-    """effect_isolation.csv：S0–S4 五行 + 式(24) 加性分解（K19/H24）。"""
+def _write_factorial(tL, tE, res, r_e11, r_l00, r_l10, r_l01,
+                     r_e00, r_e10, r_e01, cross_rel):
     path = P.OUTPUT_DIR / "effect_isolation.csv"
     path.parent.mkdir(parents=True, exist_ok=True)
+    rows = [
+        ("L00", "附录3 + 固定R（Lagrangian）", 3, "固定", P.R0_CM, "lagrange",
+         "control", r_l00),
+        ("L10", "附录4 + 固定R（Lagrangian）", 4, "固定", P.R0_CM, "lagrange",
+         "control", r_l10),
+        ("L01", "附录3 + 收缩R(t)（Lagrangian）", 3, "R(t)", np.nan, "lagrange",
+         "control", r_l01),
+        ("L11", "附录4 + 收缩R(t)（主用 Lagrangian）", 4, "R(t)", np.nan, "lagrange",
+         "deliverable", res),
+        ("E00", "附录3 + 固定R（Eulerian）", 3, "固定", P.R0_CM, "landau",
+         "control", r_e00),
+        ("E10", "附录4 + 固定R（Eulerian）", 4, "固定", P.R0_CM, "landau",
+         "control", r_e10),
+        ("E01", "附录3 + 收缩R(t)（Eulerian χ=0）", 3, "R(t)", np.nan, "landau",
+         "control", r_e01),
+        ("E11", "附录4 + 收缩R(t)（Eulerian χ=0 交叉验证）", 4, "R(t)", np.nan, "landau",
+         "control", r_e11),
+    ]
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["scenario", "description", "appendix", "domain", "R_cm",
-                    "chi", "role", "t_end_h", "reached", "mass_resid_rel"])
-        for sid, desc, app, dom, Rcm, chi, role, r in scen:
-            w.writerow([sid, desc, app, dom, IO.fmt4(Rcm), chi, role,
+                    "frame", "role", "t_end_h", "reached", "mass_resid_rel"])
+        for sid, desc, app, dom, Rcm, frame, role, r in rows:
+            w.writerow([sid, desc, app, dom, IO.fmt4(Rcm), frame, role,
                         f"{r['t_end_h']:.4f}" if r["reached"] else "",
                         r["reached"], f"{r['mass_resid_rel']:.3e}"])
         w.writerow([])
-        w.writerow(["# 效应分解 式(24): t_S2-t_S0 = (t_S1-t_S0)+(t_S2-t_S1)"])
-        w.writerow(["component", "value_h"])
-        w.writerow(["换物性(t_S1-t_S0)", f"{prop_h:.4f}"])
-        w.writerow(["加收缩(t_S2-t_S1)", f"{shrink_h:.4f}"])
-        w.writerow(["净差(t_S2-t_S0)", f"{net_h:.4f}"])
-        w.writerow(["加性恒等残差", f"{abs(net_h - (prop_h + shrink_h)):.2e}"])
+        w.writerow(["# Lagrangian 2x2 因子设计（交付分解）"])
+        w.writerow(["quantity", "value_h"])
+        w.writerow(["t00 附录3+固定", f"{tL['t00']:.4f}"])
+        w.writerow(["t10 附录4+固定", f"{tL['t10']:.4f}"])
+        w.writerow(["t01 附录3+收缩", f"{tL['t01']:.4f}"])
+        w.writerow(["t11 附录4+收缩（交付）", f"{tL['t11']:.4f}"])
+        w.writerow(["交互项 I=t11-t10-t01+t00", f"{tL['interaction_h']:.4f}"])
+        w.writerow(["物性 Shapley", f"{tL['prop_shapley_h']:.4f}"])
+        w.writerow(["收缩 Shapley", f"{tL['shrink_shapley_h']:.4f}"])
+        w.writerow(["净差 t11-t00", f"{tL['net_h']:.4f}"])
+        w.writerow(["路径A 先换物性", f"{tL['path_prop_then_shrink'][0]:.4f}"])
+        w.writerow(["路径A 再加收缩", f"{tL['path_prop_then_shrink'][1]:.4f}"])
+        w.writerow(["路径B 先加收缩", f"{tL['path_shrink_then_prop'][0]:.4f}"])
+        w.writerow(["路径B 再换物性", f"{tL['path_shrink_then_prop'][1]:.4f}"])
+        w.writerow([])
+        w.writerow(["# Eulerian 2x2（交叉对照，非交付）"])
+        w.writerow(["E t00", f"{tE['t00']:.4f}"])
+        w.writerow(["E t10", f"{tE['t10']:.4f}"])
+        w.writerow(["E t01", f"{tE['t01']:.4f}"])
+        w.writerow(["E t11 χ=0", f"{tE['t11']:.4f}"])
+        w.writerow(["E 交互项 I", f"{tE['interaction_h']:.4f}"])
+        w.writerow(["E 物性 Shapley", f"{tE['prop_shapley_h']:.4f}"])
+        w.writerow(["E 收缩 Shapley", f"{tE['shrink_shapley_h']:.4f}"])
+        w.writerow(["Lagrangian vs Eulerian 相对差", f"{cross_rel * 100:.2f}%"])
 
 
 def _write_mass_consistency(rs_C0, rs_Cth, ratio_actual, ratio_req,
                             R_consistent, inc1_rel):
-    """mass_consistency.csv：INC1 诊断量（§7.3）。⛔ 仅诊断，不作收敛判据。"""
     path = P.OUTPUT_DIR / "mass_consistency.csv"
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
@@ -190,17 +307,39 @@ def _write_mass_consistency(rs_C0, rs_Cth, ratio_actual, ratio_req,
         w.writerow(["rel_diff", f"{inc1_rel * 100:.2f}", "%", "INC1 不相容度"])
         w.writerow(["R_consistent", f"{R_consistent:.4f}", "cm", "与 rho(C) 守恒相容的末态半径"])
         w.writerow(["R_measured_end", f"{P.R_END_CM:.4f}", "cm", "附件2 实测末态半径"])
-        w.writerow(["# 结论", "ρ(C)与R(t)严格干物质守恒下不相容，差13.42%；仅诊断量，不修正R(t)、不作收敛判据",
+        w.writerow(["# 结论",
+                    "ρ(C)与R(t)严格干物质守恒下不相容；仅诊断量，不修正R(t)、不作收敛判据",
                     "", ""])
+
+
+def _write_beta(beta_series):
+    path = P.OUTPUT_DIR / "shrinkage_beta.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8-sig") as f:
+        w = csv.writer(f)
+        w.writerow(["t_h", "Cbar", "V_over_V0", "beta"])
+        for t, c, v, b in zip(beta_series["t_h"], beta_series["Cbar"],
+                              beta_series["V_over_V0"], beta_series["beta"]):
+            w.writerow([f"{t:.4f}", f"{c:.6f}", f"{v:.6f}",
+                        "" if b != b else f"{b:.6f}"])  # NaN check
+        w.writerow([])
+        w.writerow(["beta_mean", f"{beta_series['beta_mean']}"])
+        w.writerow(["beta_std", f"{beta_series['beta_std']}"])
+        w.writerow(["beta_cv", f"{beta_series['beta_cv']}"])
+        w.writerow(["linear_rejected", beta_series["linear_rejected"]])
 
 
 if __name__ == "__main__":
     _, s = solve()
-    ei = s["effect_isolation"]
+    L = s["lagrange_2x2"]
+    cc = s["crosscheck"]
     print("P4 done:", {
-        "t_end_h": round(s["t_end_h"], 3), "R@end_cm": round(s["R_at_end_cm"], 4),
+        "t_end_h": round(s["t_end_h"], 4),
+        "R@end_cm": round(s["R_at_end_cm"], 4),
         "mass_resid_rel": s["mass_resid_rel"],
-        "net_h": round(ei["net_h"], 3), "prop_h": round(ei["prop_swap_h"], 3),
-        "shrink_h": round(ei["shrink_h"], 3),
-        "identity_resid_h": ei["identity_resid_h"],
-        "chi_diff_rel": round(s["chi_closure"]["diff_rel"], 4)})
+        "I_h": round(L["interaction_h"], 3),
+        "prop_shapley": round(L["prop_shapley_h"], 3),
+        "shrink_shapley": round(L["shrink_shapley_h"], 3),
+        "euler_h": round(cc["euler_chi0_h"], 4),
+        "cross_rel": round(cc["diff_rel"], 4),
+    })

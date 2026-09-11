@@ -1,8 +1,9 @@
-"""交付文件落盘（CSV 报表 + result*.xlsx，MODELING_REPORT §11 落盘清单）。
+"""交付文件落盘（CSV 报表 + result*.xlsx）。
 
-⛔ 全部数值 4 位小数（K3）；问题4 域外单元置空字符串（K17，非 0/NaN 文本，§7.7 式26）；
-result*.xlsx 表头与附件3 模板逐字一致：首格「时间\\到药材中心的距离」+ 距离列（cm）。
-大表（result2 全程 1 s）用 openpyxl write_only 流式写出，避免峰值内存。
+数值以 Excel 数值类型写入（round 到 4 位小数 + 单元格格式 0.0000），
+禁止把温度/含水率写成字符串。问题4 域外单元留空（None），不是 0、也不是 'NaN'。
+result*.xlsx 表头与附件3 模板一致：首格「时间\\到药材中心的距离」+ 距离列（cm）。
+result3/result4 工作表名保持模板的 Sheet1。
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import math
 
 import numpy as np
 from openpyxl import Workbook
+from openpyxl.cell import WriteOnlyCell
 
 import params as P
 
@@ -18,13 +20,30 @@ HEADER0 = "时间\\到药材中心的距离"
 
 
 def fmt4(x):
-    """4 位小数字符串；NaN/None → 空串（域外置空，K17）。"""
+    """4 位小数字符串；NaN/None → 空串。仅用于 CSV 报表，不用于 xlsx。"""
     if x is None:
         return ""
     xf = float(x)
     if not math.isfinite(xf):
         return ""
     return f"{xf:.4f}"
+
+
+def as_num4(x):
+    """xlsx 用：有限值 → round(..., 4) 的 float；否则 None（空白单元格）。"""
+    if x is None:
+        return None
+    xf = float(x)
+    if not math.isfinite(xf):
+        return None
+    return round(xf, 4)
+
+
+def _num_cell(ws, value, number_format="0.0000"):
+    cell = WriteOnlyCell(ws, value=value)
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        cell.number_format = number_format
+    return cell
 
 
 def _dist_header(last_label=None):
@@ -41,7 +60,7 @@ def write_result_xlsx(path, sheets, times_s, last_label=None):
 
     sheets : dict 工作表名 -> 2D 数组 (nt, ncol)，ncol=21 或 22（含末列表面）。
     times_s: 长度 nt 的时间列（秒，整数写出）。
-    数值经 fmt4 转字符串（含置空）；表头由 _dist_header 生成。
+    温度/含水率为数值单元格（四位小数），域外为空白。
     """
     wb = Workbook(write_only=True)
     header = _dist_header(last_label)
@@ -50,8 +69,10 @@ def write_result_xlsx(path, sheets, times_s, last_label=None):
         ws.append(header)
         arr = np.asarray(arr)
         for i in range(arr.shape[0]):
-            row = [int(round(times_s[i]))]
-            row.extend(fmt4(v) for v in arr[i])
+            row = [_num_cell(ws, int(round(times_s[i])), "0")]
+            for v in arr[i]:
+                nv = as_num4(v)
+                row.append(None if nv is None else _num_cell(ws, nv))
             ws.append(row)
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(str(path))
@@ -59,12 +80,7 @@ def write_result_xlsx(path, sheets, times_s, last_label=None):
 
 def write_table_csv(path, row_labels, col_labels, matrix, corner=HEADER0,
                     extra_last_row=None):
-    """写报表 CSV（表1–6）。
-
-    row_labels : 行标签（时间）；col_labels：列标签（距离/「药材表面」）。
-    matrix     : (nrow, ncol)；经 fmt4（含置空）。
-    extra_last_row : (label, values) 末行（如「烘干结束时间」），可选。
-    """
+    """写报表 CSV（表1–6）。matrix 经 fmt4（含置空）。"""
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
