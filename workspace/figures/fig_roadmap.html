@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin:0; padding:0; background:transparent; }
+  * { box-sizing:border-box; border-radius:0 !important; box-shadow:none !important; }
+  .fig, .fig * { font-style:normal !important; }
+
+  .fig {
+    width: fit-content;
+    display:flex; flex-direction:column; align-items:stretch;
+    background:transparent;
+    font-family:"Times New Roman","SimSun","Songti SC","Source Han Serif SC",serif;
+    color:#000; font-size:20px; line-height:1.40; padding:24px;
+  }
+
+  .row { width:900px; display:flex; align-items:stretch; }
+
+  .node { border:1px solid #000; background:#ffffff; padding:11px 16px;
+          display:flex; flex-direction:column; justify-content:center; }
+  .node[data-mh-focus="true"] { border-width:1.4px; }
+  .hd { font-weight:700; letter-spacing:0.06em; margin-bottom:4px; }
+  .bd { font-size:20px; }
+
+  .vstub { display:flex; justify-content:center; }
+  .vstub .seg { display:block; width:0; height:16px; border-left:1px solid #000; }
+  .bus { border-top:1px solid #000; height:0; }
+
+  .down { display:flex; flex-direction:column; align-items:center; }
+  .down .seg { display:block; width:0; height:19px; border-left:1px solid #000; }
+  .down .tip { display:block; width:0; height:0;
+               border-left:5px solid transparent; border-right:5px solid transparent;
+               border-top:8px solid #000; }
+
+  .cell { display:flex; justify-content:center; }
+
+  .arow { display:flex; align-items:center; width:100%; }
+  .arow .ln { display:block; flex:1 1 auto; height:0; border-top:1px solid #000; }
+  .arow .tipL { display:block; width:0; height:0;
+                border-top:5px solid transparent; border-bottom:5px solid transparent;
+                border-right:8px solid #000; }
+  .arow .tipR { display:block; width:0; height:0;
+                border-top:5px solid transparent; border-bottom:5px solid transparent;
+                border-left:8px solid #000; }
+
+  .lbl { font-size:20px; text-align:center; white-space:nowrap; }
+  .edge { display:flex; flex-direction:column; justify-content:center; }
+
+  .c290 { width:290px; }
+  .c490 { width:490px; }
+  .c900 { width:900px; }
+  .c174 { width:174px; }
+  .c68  { width:68px; }
+  .gap15 { gap:15px; }
+
+  .busA { margin-left:145px; width:610px; }
+  .busB { margin-left:87px;  width:726px; }
+</style>
+</head>
+<body>
+<div class="fig" data-mh-palette="mono" data-mh-quality="roadmap-v2">
+
+  <!-- ===== 输入层：三份题给材料 ===== -->
+  <div class="row gap15">
+    <div class="node c290" data-mh-node="true" data-mh-row="1">
+      <div class="hd">附件 1 环境时序</div>
+      <div class="bd">241 行采样，空气温湿度分段线性插值</div>
+    </div>
+    <div class="node c290" data-mh-node="true" data-mh-row="1">
+      <div class="hd">附件 2 半径实测</div>
+      <div class="bd">145 行 R(t) 单调递减，仅问题四启用</div>
+    </div>
+    <div class="node c290" data-mh-node="true" data-mh-row="1">
+      <div class="hd">附录 2 / 3 / 4 物性</div>
+      <div class="bd">密度、比热、导热与扩散系数表达式</div>
+    </div>
+  </div>
+
+  <div class="row gap15">
+    <div class="vstub c290"><span class="seg"></span></div>
+    <div class="vstub c290"><span class="seg"></span></div>
+    <div class="vstub c290"><span class="seg"></span></div>
+  </div>
+  <div class="row"><div class="bus busA"></div></div>
+  <div class="row"><div class="cell c490"><div class="down"><span class="seg"></span><span class="tip"></span></div></div></div>
+
+  <!-- ===== 共用内核与校验回路 ===== -->
+  <div class="row">
+    <div class="node c490" data-mh-node="true" data-mh-focus="true" data-mh-row="2">
+      <div class="hd">共用求解内核</div>
+      <div class="bd">圆柱径向控制体、全隐式有限体积、第三类边界</div>
+    </div>
+    <div class="edge" style="width:140px" data-mh-row="2">
+      <div class="lbl">回改 N、Δt</div>
+      <div class="arow"><span class="tipL"></span><span class="ln"></span><span class="tipR"></span></div>
+    </div>
+    <div class="node" style="width:270px" data-mh-node="true" data-mh-row="2">
+      <div class="hd">一致性校验</div>
+      <div class="bd">算子精度、质量收支、网格与步长收敛</div>
+    </div>
+  </div>
+
+  <div class="row"><div class="cell c490"><span class="vstub" style="width:100%"><span class="seg"></span></span></div></div>
+  <div class="row"><div class="bus busB"></div></div>
+  <div class="row">
+    <div class="cell c174" data-mh-col="1"><div class="down"><span class="seg"></span><span class="tip"></span></div></div>
+    <div class="c68"></div>
+    <div class="cell c174" data-mh-col="2"><div class="down"><span class="seg"></span><span class="tip"></span></div></div>
+    <div class="c68"></div>
+    <div class="cell c174" data-mh-col="3"><div class="down"><span class="seg"></span><span class="tip"></span></div></div>
+    <div class="c68"></div>
+    <div class="cell c174" data-mh-col="4"><div class="down"><span class="seg"></span><span class="tip"></span></div></div>
+  </div>
+
+  <!-- ===== 四问渐进承接链 ===== -->
+  <div class="row">
+    <div class="node c174" data-mh-node="true" data-mh-row="3" data-mh-col="1">
+      <div class="hd">问题一</div>
+      <div class="bd">常物性单向解耦，Bessel 级数半解析基准</div>
+    </div>
+    <div class="edge c68">
+      <div class="lbl">加物性</div>
+      <div class="arow"><span class="ln"></span><span class="tipR"></span></div>
+    </div>
+    <div class="node c174" data-mh-node="true" data-mh-row="3" data-mh-col="2">
+      <div class="hd">问题二</div>
+      <div class="bd">变物性双向耦合，保序算子分裂与 Picard 复核</div>
+    </div>
+    <div class="edge c68">
+      <div class="lbl">加判据</div>
+      <div class="arow"><span class="ln"></span><span class="tipR"></span></div>
+    </div>
+    <div class="node c174" data-mh-node="true" data-mh-row="3" data-mh-col="3">
+      <div class="hd">问题三</div>
+      <div class="bd">全域最大含水率触阈判据，出口时刻线性插值</div>
+    </div>
+    <div class="edge c68">
+      <div class="lbl">加动域</div>
+      <div class="arow"><span class="ln"></span><span class="tipR"></span></div>
+    </div>
+    <div class="node c174" data-mh-node="true" data-mh-row="3" data-mh-col="4">
+      <div class="hd">问题四</div>
+      <div class="bd">Landau 变换 ξ = r / R(t)，表观对流与效应隔离</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="vstub c174"><span class="seg"></span></div>
+    <div class="c68"></div>
+    <div class="vstub c174"><span class="seg"></span></div>
+    <div class="c68"></div>
+    <div class="vstub c174"><span class="seg"></span></div>
+    <div class="c68"></div>
+    <div class="vstub c174"><span class="seg"></span></div>
+  </div>
+  <div class="row"><div class="bus busB"></div></div>
+  <div class="row"><div class="cell c900"><div class="down"><span class="seg"></span><span class="tip"></span></div></div></div>
+
+  <!-- ===== 交付层 ===== -->
+  <div class="row">
+    <div class="node c900" data-mh-node="true" data-mh-row="4">
+      <div class="hd">交付产物</div>
+      <div class="bd">各问径向浓度分布表、达标时长与四情景效应分解</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

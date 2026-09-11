@@ -1,0 +1,45 @@
+{
+  "schema": "comp_review_verdict/v1",
+  "problem": "2026-CUMCM-A-herb-drying",
+  "reviewed_at": "2026-09-11",
+  "fatal_count": 0,
+  "gate": "pass",
+  "deterministic_anchor": {
+    "audit_report": "fatal=0, warn=23 (all in the '3 known false-positive classes': derived-value provenance, doc/assertion bare-numbers, alias symbol names)",
+    "validation_all_pass": true,
+    "decomposition_identity_verified": true
+  },
+  "findings": [
+    {
+      "category": "cross_problem",
+      "severity": "major",
+      "where": "code/fvm.py:42 (FACE_MODE='arith') vs MODELING_REPORT.md §13.4 + MC2 + CROSS_PROBLEM_LEDGER.json:17 (interface_property='harmonic_mean')",
+      "evidence": "Spec/method-claim/ledger all designate harmonic mean and explicitly exclude arithmetic ('arithmetic overestimates conductance, speeds drying'); delivered code uses arithmetic. RESULTS.md discloses this and shows arithmetic is grid-converged (N40 vs N80 = 0.46%) while harmonic does not converge at N=40 (needs N>=320). §13.4's exclusion reason contradicts fvm.py:36-41 comment claiming both converge to ~57h.",
+      "impact": "Delivered numbers are valid (converged), but paper claiming harmonic would be method-code inconsistent; the two justifications are mutually contradictory.",
+      "fix": "Paper must state ARITHMETIC mean as delivered, report the two-scheme t_end spread (~5%: 56.7h vs harmonic fine-grid ~60h) as a robustness range; update MC2, Ledger.interface_property, and §13.4; delete the 'arithmetic speeds drying' claim. Do NOT change delivered values."
+    },
+    {
+      "category": "extrapolation",
+      "severity": "major",
+      "where": "MODELING_REPORT.md §7.4 (and §8 symbol table, MC14, §16.1 '半径冻结(t>48h)' row)",
+      "evidence": "§7.4 states attachment2 = '145 rows, t in [0,172800]s (48h), spacing 1200s' and builds a 'freeze radius after 48h -> t_end upper-bound bias' narrative. Actual file (pandas-verified) = 0-259200s (72h), spacing 1800s (30min), 145 rows. PROBLEM_ANALYSIS §3.3 and code/geometry.py use the correct 72h. RESULTS.md: radius_frozen=False (t_end=52.19h < 72h), so the freeze never triggers.",
+      "impact": "Delivered result correct (code uses true data); but modeling-report prose states a wrong data span and a chain of derived claims (MC14 bias, §16.1 accountability) resting on a false 48h-freeze premise.",
+      "fix": "Correct span to 0-259200s / 1800s / 72h in paper (and MODELING_REPORT if editable); replace 'freeze after 48h -> upper-bound bias' with 't_end=52.19h lies within 72h measured data, R(t) fully from interpolation, no freeze'. Do NOT change delivered values."
+    },
+    {
+      "category": "cross_problem",
+      "severity": "minor",
+      "where": "RESULTS.md problem-3 (t_end=56.706 h) vs output/effect_isolation.csv S0 (56.7087 h)",
+      "evidence": "P3 baseline and S0 are the identical scenario (appendix3, fixed R=2cm, max criterion) and should be byte-identical; observed 11 s / 0.005% difference, likely sub-step interpolation/step-size difference between two runs.",
+      "impact": "Same quantity appears with two values; cosmetic but a careful reader may flag.",
+      "fix": "Report a single value for problem-3 t_end and S0 (recommend 56.709 h), or note the two are the same quantity within sub-step tolerance."
+    }
+  ],
+  "categories_checked_clear": [
+    "bound_direction: Robin BC sign, 1/R^2 shrinkage factor, max_r criterion, upwind direction all verified correct",
+    "double_count: effect decomposition identity exact (residual 7e-15), no third term",
+    "extrapolation: train_range enforced, plateau/freeze flagged as explicit assumptions (F2 is a fact-error, not an over-hard claim)",
+    "missing_feature: all observed variables (T_air, C_air, R(t)) used; latent-heat omission disclosed with direction",
+    "task_vs_text: max not mean, t_end in hours, table6 last col = herb surface r=R(t), min-time-to-threshold direction all match problem statement"
+  ]
+}

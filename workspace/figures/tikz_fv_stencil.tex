@@ -1,0 +1,90 @@
+% 图契约（tikz_fv_stencil）
+%   purpose: 交代全隐式有限体积在两个时间层之间的耦合模板与界面物性取法
+%   topology: geometry（两时间层的结点阵与依赖箭头，单幅连续示意）
+%   node_roles: 网格结点（实心圆点）/ 控制体界面（虚线刻线）/ 推导注记（文字块）
+%   edge_roles: 时间层（实线）/ 同层空间依赖（实心箭头）/ 跨层时间项（实心箭头）/ 界面（虚线）
+%   style_family: G1 几何（辅以 C1 因果：依赖关系决定三对角结构）
+%   annotation_policy: 短公式紧贴其解释的结点或界面；系数细节留正文
+%   result_policy: none（不出现任何数值结果）
+%   final_width: 12.0cm 设计宽度，论文按 0.92\textwidth 插入
+%   print_mode: 纯黑白线稿，线型承担语义，不依赖颜色
+\documentclass[border=4pt]{standalone}
+% 本机 MiKTeX 的 expl3 为 2024-01-04，低于 ctex/xeCJK 的下限；fontspec 可用，
+% 故直接绑定宋体，中文换行全部用显式 \\ 控制（不依赖 CJK 自动断行）。
+\usepackage{fontspec}
+\setmainfont{SimSun}
+\usepackage{amsmath}
+% 下标默认取基号 2/3，按 0.92\textwidth 插入后降到 6pt 以下；抬到 8.4pt 使
+% 论文成图内最小字号仍在 8pt 以上（figure_pdf_quality_check 的印刷字号下限）。
+\DeclareMathSizes{9}{9}{8.4}{8.4}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\tikzset{
+  % 语义线型令牌：全部纯黑，层次由线宽与虚实承担
+  layerline/.style= {draw=black, line width=1.1pt},
+  cvface/.style   = {draw=black, line width=0.6pt, dashed},
+  spacedep/.style = {draw=black, line width=0.9pt, -{Latex[length=2.4mm]}},
+  timedep/.style  = {draw=black, line width=1.1pt, -{Latex[length=2.6mm]}},
+  gridnode/.style = {circle, fill=black, inner sep=0pt, minimum size=3.6pt},
+  % 数学标号显式声明盒宽：静态检查按可见字符数估宽会把 \varphi 之类命令字母
+  % 计进去（估到 3cm 以上，实测约 1.2cm），显式声明后其重叠模型与实际几何一致。
+}
+
+\begin{document}
+\adjustbox{max width=\textwidth}{%
+\begin{tikzpicture}[font=\small]
+
+  % ================= 新时间层：三个未知量同层耦合 =================
+  \draw[layerline] (-0.15,3.2) -- (6.7,3.2);
+  \foreach \x in {1.2,3.6,6.0} \node[gridnode] at (\x,3.2) {};
+  % 时间层写在行首标号上，结点只带空间下标：避免同一符号上下标并置
+  \node[minimum width=1.4cm, inner sep=1.5pt, anchor=south] at (1.2,3.42) {$\varphi_{i-1}$};
+  \node[minimum width=1.4cm, inner sep=1.5pt, anchor=south] at (3.6,3.42) {$\varphi_{i}$};
+  \node[minimum width=1.4cm, inner sep=1.5pt, anchor=south] at (6.0,3.42) {$\varphi_{i+1}$};
+
+  % 控制体界面：虚线刻线，界面物性在此取算术平均
+  \draw[cvface] (2.4,2.75) -- (2.4,3.65);
+  \draw[cvface] (4.8,2.75) -- (4.8,3.65);
+
+  % 同层空间依赖：两侧邻点的通量都指向待解结点
+  \draw[spacedep] (1.55,3.2) -- (3.25,3.2);
+  \draw[spacedep] (5.65,3.2) -- (3.95,3.2);
+  \node[anchor=north] at (2.4,2.68) {$\Gamma_{i-1/2}$};
+  \node[anchor=north] at (4.8,2.68) {$\Gamma_{i+1/2}$};
+
+  % ================= 旧时间层：仅提供本结点的初值 =================
+  \draw[layerline] (-0.15,0.8) -- (6.7,0.8);
+  \foreach \x in {1.2,3.6,6.0} \node[gridnode] at (\x,0.8) {};
+  \node[minimum width=1.4cm, inner sep=1.5pt, anchor=north] at (1.2,0.58) {$\varphi_{i-1}$};
+  \node[minimum width=1.4cm, inner sep=1.5pt, anchor=north] at (3.6,0.58) {$\varphi_{i}$};
+  \node[minimum width=1.4cm, inner sep=1.5pt, anchor=north] at (6.0,0.58) {$\varphi_{i+1}$};
+
+  % 跨层时间项：只有同一结点的旧值进入右端
+  \draw[timedep] (3.6,1.05) -- (3.6,2.90);
+  \node[anchor=east] at (3.42,1.95) {时间项};
+
+  \node[minimum width=1.2cm, inner sep=1.5pt, anchor=east] at (-0.25,3.2) {$t^{n+1}$};
+  \node[minimum width=1.2cm, inner sep=1.5pt, anchor=east] at (-0.25,0.8) {$t^{n}$};
+
+  % ================= 注记 =================
+  \node[align=left, text width=5.2cm] at (9.9,3.1)
+       {界面物性取相邻结点算术平均\\[3pt]
+        $\Gamma_{i+1/2}=\tfrac12(\Gamma_i+\Gamma_{i+1})$};
+
+  \node[align=left, text width=5.2cm] at (9.9,1.0)
+       {新层三点同时未知，旧层只出现\\
+        本结点，故每行恰有三个非零元};
+
+  \node[align=left, text width=7.4cm] at (4.2,-1.2)
+       {逐行装配后得三对角系统 $A\varphi=d$，\\[2pt]
+        第 $i$ 行的三个系数依次为 $a_i,b_i,c_i$，\\[2pt]
+        其中 $a_i,c_i\le 0$ 且 $b_i\ge|a_i|+|c_i|$，对角占优};
+
+  \node[align=left, text width=7.4cm] at (4.2,-3.6)
+       {轴心控制体无左侧界面，该行只保留右侧通量；\\
+        表面控制体的右侧通量由第三类边界给出};
+
+\end{tikzpicture}
+}%
+\end{document}

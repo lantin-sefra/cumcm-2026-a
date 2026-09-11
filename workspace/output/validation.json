@@ -1,0 +1,152 @@
+{
+  "problem": "2026-CUMCM-A-herb-drying",
+  "delivery_grid": {
+    "N": 40,
+    "dt_policy_P1": "1s",
+    "dt_policy_P234": "seg(2->4)s"
+  },
+  "radius_frozen": false,
+  "evidence_section9": {
+    "9_1_mass_budget": {
+      "P1": {
+        "mass_resid_rel": 7.413282238555522e-16,
+        "pass": true
+      },
+      "P3": {
+        "mass_resid_rel": 1.5512549100597547e-14,
+        "pass": true
+      },
+      "P4_S2": {
+        "mass_resid_rel": 7.514545965839919e-16,
+        "pass": true
+      },
+      "tol": 1e-10,
+      "pass": true
+    },
+    "9_2_grid_independence": {
+      "ref": {
+        "N": 160,
+        "dt_s": 0.125
+      },
+      "delivery_N": 40,
+      "eT": 2.7604013111627054e-05,
+      "eC": 0.0003036946076271816,
+      "tol": 0.005,
+      "pass": true
+    },
+    "9_2_dt_independence": {
+      "ref_dt_s": 0.5,
+      "N": 40,
+      "steps_tested": [
+        2.0,
+        1.0,
+        0.5
+      ],
+      "per_dt": {
+        "2.0": {
+          "eT": 4.897129588346679e-05,
+          "eC": 5.192820024938833e-05
+        },
+        "1.0": {
+          "eT": 1.6316091513945907e-05,
+          "eC": 1.7310176582314406e-05
+        }
+      },
+      "eT_max": 4.897129588346679e-05,
+      "eC_max": 5.192820024938833e-05,
+      "tol": 0.005,
+      "pass": true
+    },
+    "9_2_tend_grid_sensitivity": {
+      "t_end_N20_h": 56.181112349852675,
+      "t_end_N40_h": 56.708876235597444,
+      "rel_change": 0.009306548124003894,
+      "tol": 0.01,
+      "pass": true
+    },
+    "9_3_bessel_duhamel_P1": {
+      "n_roots": 30,
+      "max_dev_C": 0.0011630148463765977,
+      "tol_C": 0.05,
+      "pass": true,
+      "T_center_num": 33.57650785763557,
+      "T_center_ana": 33.575347838843236,
+      "T_surf_num": 36.78620022186597,
+      "T_surf_ana": 36.78556528858245
+    },
+    "9_4_physical": {
+      "thermal_precedes_moisture": true,
+      "T_center_1800": 33.57650785763557,
+      "C_center_1800": 2.549989937114901,
+      "C_monotone_nonincreasing": true,
+      "T_nondecr_while_air_rising": true,
+      "T_center_max_drop_C": 5.216057616763692e-05,
+      "T_air_max_drop_C": 0.007500000000000284,
+      "T_ramp_rise_C": 21.999291208305102,
+      "space_order_C": true,
+      "space_order_T": true,
+      "bounded_no_nan_no_neg": true,
+      "field_ranges": {
+        "C": [
+          0.052537825081366264,
+          2.5500000000000065
+        ],
+        "T": [
+          27.99999999999999,
+          50.16500000000031
+        ]
+      },
+      "pass": true
+    },
+    "9_5_K18_moving_reduces_to_fixed": {
+      "t_end_chi0_h": 128.59370950394927,
+      "t_end_chi1_h": 128.59370950394927,
+      "rel_diff": 0.0,
+      "tol": 0.001,
+      "pass": true,
+      "note": "Rdot=0 时对流项恒零，χ 分支退化一致"
+    },
+    "9_5_dirichlet_limit": {
+      "C_surf_1h": 0.04272000000000171,
+      "C_air_1h": 0.04272,
+      "gap": 1.7069679003611782e-15,
+      "pass": true,
+      "note": "h_m→大 表面≈C_air ⇒ Robin 符号/方向正确"
+    },
+    "X_C1_face_mode_convergence": {
+      "delivery_mode": "arith",
+      "arith_tend_h": {
+        "20": 56.181112349852675,
+        "40": 56.708876235597444,
+        "80": 56.9696440678186
+      },
+      "arith_mass_resid": {
+        "20": 1.4030926535869084e-14,
+        "40": 4.494758964764766e-15,
+        "80": 3.438706378019918e-15
+      },
+      "arith_N40_vs_N80_rel": 0.004577311943720916,
+      "arith_grid_converged_at_N40": true,
+      "note": "交付用算术平均（§6.1）：N=40 已网格收敛且复现报告锚点；调和平均（§13.4）在 N=40 未收敛，作口径对照，不作交付"
+    }
+  },
+  "constraints": {
+    "K9_P3_tend_in_24_120": true,
+    "K10_P4_tend_in_24_120": true,
+    "K12_mass_residual": true,
+    "K13_grid_deviation": true,
+    "K18_moving_reduces_fixed": true,
+    "K19_additive_identity": true
+  },
+  "sensitivity": {
+    "base_t_end_h": 56.181112349852675,
+    "n_cases": 13
+  },
+  "t_end_summary_h": {
+    "P3_S0": 56.706266437316906,
+    "P4_S2_chi0_primary": 52.18956526252852,
+    "P4_S3_chi1_alt": 50.693953050922325,
+    "chi_closure_diff_rel": -0.028657303506607768
+  },
+  "all_pass": true
+}

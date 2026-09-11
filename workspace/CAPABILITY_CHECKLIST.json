@@ -1,0 +1,118 @@
+{
+  "problem_id": "2026A",
+  "problem_title": "药材的烘干问题",
+  "n_subproblems": 4,
+  "_note": "题型无关能力清单。source_sentence 引用 PROBLEM_ANALYSIS.md 第 5.6 节「题目逐句拆解表」的句号。本题为热质耦合偏微分方程数值求解题，能力项聚焦于「方程是否真按题面机制建立」「产物是否按题面网格交付」「达标判据是否真被判定」，防止退化为单场（只算温度不算水分）、稳态、常物性或固定边界的简化演示。",
+
+  "capabilities": [
+    {
+      "id": "P1-C1", "subproblem": 1, "name": "预热阶段热-质耦合圆柱径向 PDE 建模", "judge": "semantic",
+      "criterion": "温度场与水分浓度场各自满足圆柱坐标径向瞬态方程（含 1/r 项），表面为第三类（Robin）对流边界、中心为对称零通量边界；水分方程的扩散系数按 D=7e-9·exp(-0.89/C) 随局部 C 逐点更新",
+      "source_sentence": ["S8", "S2"],
+      "falsifiable_check": "求解器必须同时输出 T(r,t) 与 C(r,t) 两个二维场且二者形状一致；离散算子中必须出现柱坐标 1/r 因子（等价地用 (r_{i+1/2}·flux - r_{i-1/2}·flux)/(r_i·dr) 的有限体积形式）；D 必须是随 C 逐点计算的数组（np.ndarray，且 D.std()>0，证明非常数）；中心节点必须用对称条件（dC/dr|_0=0、dT/dr|_0=0，残差<1e-8）。若 D 为标量常数、或只解出温度一个场、或用直角坐标拉普拉斯算子（缺 1/r），判不成立并 raise"
+    },
+    {
+      "id": "P1-C2", "subproblem": 1, "name": "时变环境边界取自附件1（非常数环境）", "judge": "machine",
+      "machine_check": "ingest",
+      "criterion": "边界上的烘房温度 T_air(t) 与空气水分浓度 C_air(t) 由附件1 全部 241 行插值给出，随时间变化",
+      "source_sentence": ["S7", "S2"],
+      "falsifiable_check": "读入附件1 后断言行数==241、时间跨度==[0,14400]；断言 T_air 在 0–1800 s 内取值不唯一（np.unique 长度>1）且 T_air(0)≈28、T_air(1800)≈41.513。若代码把环境温度写成常数（如全程 50 ℃）、或只取首末两点线性化、或行数不足 241，判不成立并 raise"
+    },
+    {
+      "id": "P1-C3", "subproblem": 1, "name": "表1/表2 论文表格（7 时刻 × 5 位置，温度与水分浓度各一张）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/table1_2_problem1.csv",
+      "criterion": "两张表分别给出 t=100,300,600,900,1200,1500,1800 s 与 r=0,0.5,1,1.5,2 cm 交叉共 35 个温度值与 35 个水分浓度值，均保留 4 位小数",
+      "source_sentence": ["S9"]
+    },
+    {
+      "id": "P1-C4", "subproblem": 1, "name": "result1.xlsx 完整网格结果（1800×21，双工作表）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/result1.xlsx",
+      "criterion": "含「温度」「水分浓度」两个工作表；⛔ A 列以附件3 模板为准，自 1 s 起步长 1 s 至 1800 s（共 1800 行；若另加 t=0 行则 1801 行，亦可接受）；第 1 行为距离 0–2 cm 步长 0.1 cm 共 21 列；数值保留 4 位小数；无空缺、无 NaN",
+      "source_sentence": ["S10"]
+    },
+
+    {
+      "id": "P2-C1", "subproblem": 2, "name": "全程变物性强耦合模型（附录3 四条经验公式全部生效）", "judge": "semantic",
+      "criterion": "ρ、c_p、k 随 C 变化，D 随 C 与药材局部温度 T 双重变化；温度场与浓度场通过物性双向耦合（C 影响 ρ/c_p/k 进而影响传热，T 影响 D 进而影响传质），每个时间步重算物性",
+      "source_sentence": ["S14", "S13"],
+      "falsifiable_check": "断言 ρ、c_p、k、D 四者均为随空间变化的数组且 std()>0（证明非常数）；断言 D 的计算表达式同时依赖 C 与 T——数值检验：固定 C 不变、把 T 抬高 10 K，D 必须变化超过 5%；断言温度以**绝对温度 K** 进入 D（检验 exp(-3850/T) 中 T>273，若 T<100 说明误用 ℃ 则 raise）；断言未出现附录2 的常数 820/2600/0.36。任一不成立即 raise"
+    },
+    {
+      "id": "P2-C2", "subproblem": 2, "name": "两阶段（升温段 + 恒温平台段）均被时间轴覆盖", "judge": "machine",
+      "machine_check": "ingest",
+      "criterion": "求解时段跨越附件1 的升温段与恒温平台段；t>14400 s 后的环境条件按平台值延拓且延拓规则显式记录",
+      "source_sentence": ["S13", "S2"],
+      "falsifiable_check": "断言环境插值函数在 t=1800 s（升温段）与 t=10800 s（平台段）给出的 T_air 差值 > 5 ℃，证明两阶段确被区分；断言 t>14400 s 时返回平台值（T_air≈50.165、C_air≈0.04986）而非线性外推到非物理值（如 T_air>100 或 C_air<0）。不成立即 raise"
+    },
+    {
+      "id": "P2-C3", "subproblem": 2, "name": "表3/表4 论文表格（3 h 内每 0.5 h × 5 位置）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/table3_4_problem2.csv",
+      "criterion": "两张表分别给出 t=0.5,1.0,1.5,2.0,2.5,3.0 h 与 r=0,0.5,1,1.5,2 cm 交叉的温度与水分浓度，保留 4 位小数",
+      "source_sentence": ["S15"]
+    },
+    {
+      "id": "P2-C4", "subproblem": 2, "name": "result2.xlsx 完整网格结果（每 1 s × 每 0.1 cm，双工作表）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/result2.xlsx",
+      "criterion": "含「温度」「水分浓度」两个工作表，A 列时间步长 1 s，第 1 行距离步长 0.1 cm（0–2 cm 共 21 列），覆盖问题2 所述整个烘干过程时段，4 位小数",
+      "source_sentence": ["S15"]
+    },
+
+    {
+      "id": "P3-C1", "subproblem": 3, "name": "达标判据判定与烘干时长求解（max_r C < 0.15）", "judge": "machine",
+      "machine_check": "constraint",
+      "criterion": "以「所有径向位置的水分浓度均低于 0.15 kg/kg」为终止判据求出烘干时长（单位 h），控制点为浓度最高处（中心 r=0）",
+      "source_sentence": ["S17", "S16"],
+      "falsifiable_check": "断言在报出的结束时刻 t_end，整个径向剖面 C(r,t_end).max() < 0.15；并断言在 t_end 之前一个输出步 C.max() >= 0.15（证明是首次达标而非任意时刻）；断言判据用 max（不是 mean/体平均——用平均会显著低估时长，属降维）；断言 t_end 落在 24–120 h 内（题面「2–3 天」量级校验，越界须在报告中解释）。任一不成立即 raise",
+      "note": "本步骤预检值约 55.08 h，供 comp-code 交叉对照量级，不作为标准答案"
+    },
+    {
+      "id": "P3-C2", "subproblem": 3, "name": "表5 论文表格（每 6 h × 每 0.5 cm + 烘干结束时间行）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/table5_problem3.csv",
+      "criterion": "行标签为 6,12,18,… 直到最后一行「烘干结束时间」；列为 r=0,0.5,1,1.5,2 cm 的水分浓度，4 位小数",
+      "source_sentence": ["S18"]
+    },
+    {
+      "id": "P3-C3", "subproblem": 3, "name": "result3.xlsx 完整网格结果（每 60 s × 每 0.1 cm）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/result3.xlsx",
+      "criterion": "A 列时间步长 60 s 覆盖 0 至烘干结束时间，第 1 行距离 0–2 cm 步长 0.1 cm，保存水分浓度，4 位小数",
+      "source_sentence": ["S18"]
+    },
+
+    {
+      "id": "P4-C1", "subproblem": 4, "name": "收缩移动边界建模（R(t) 取自附件2 + 附录4 物性）", "judge": "semantic",
+      "criterion": "求解域外边界随时间内移，R(t) 由附件2 全部 145 行插值给出；采用归一化坐标（Landau 变换）或等效动网格，方程中出现由边界移动引起的附加对流项；物性用附录4 的四条公式",
+      "source_sentence": ["S19", "S20"],
+      "falsifiable_check": "断言 R(t) 为随时间变化的插值函数且 R(0)≈2.0 cm、R(72h)≈1.198 cm、np.unique(R).size>50（证明用了完整时程而非两点线性）；断言物理域外半径在求解过程中确实缩小（R(t_end) < 0.9·R(0)）；断言归一化坐标下含边界移动项（dR/dt 非零时该项贡献不为 0）；断言物性用附录4 系数（760/90/1850/2150/0.12/0.2/4.2e-4/0.3）而非附录3 系数（不得出现 650/128/2736/2.4e-3/0.45）。任一不成立（尤其把 R 固定为 2 cm 或误用附录3 公式）即 raise",
+      "note": "⛔ 附录4 的 ρ(C) 与附件2 的 R(t) 不能同时严格满足干物质守恒（详见 DATA_FACTS.json INC1）。R(t) 按题面「请根据附件2」作为给定移动边界使用，守恒残差只作诊断量输出，不作收敛判据"
+    },
+    {
+      "id": "P4-C2", "subproblem": 4, "name": "考虑收缩后的烘干时长求解", "judge": "machine",
+      "machine_check": "constraint",
+      "criterion": "在收缩域内以 max_r C < 0.15 判定烘干结束，报出时长（h），并与问题3 的不收缩结果对比说明收缩的影响方向",
+      "source_sentence": ["S20"],
+      "falsifiable_check": "断言 t_end 时刻收缩域内 C.max()<0.15 且前一输出步 >=0.15；断言输出中同时给出「附录4+收缩」与「附录4+固定半径」两个时长以隔离收缩效应（只报一个数无法支撑影响方向的结论）；断言 t_end 落在 24–120 h 内。不成立即 raise",
+      "note": "本步骤预检值约 51.40 h（附录4+收缩），供量级对照"
+    },
+    {
+      "id": "P4-C3", "subproblem": 4, "name": "表6 论文表格（末列为「药材表面」的移动边界表）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/table6_problem4.csv",
+      "criterion": "行标签 6,12,18,… 至「烘干结束时间」；列为 r=0,0.5,… 各固定位置，⛔ 末列为「药材表面」即 r=R(t) 处的值；超出当时 R(t) 的固定列必须留空而非填数",
+      "source_sentence": ["S21"],
+      "note": "R(6h)=1.374 cm，故 r=1.5 与 r=2.0 两列自 6 h 起已不在药材内，必须留空——这是本表与表5 的本质区别"
+    },
+    {
+      "id": "P4-C4", "subproblem": 4, "name": "result4.xlsx 完整网格结果（每 60 s × 每 0.1 cm，末列为药材表面）", "judge": "machine",
+      "machine_check": "delivery", "required_output": "output/result4.xlsx",
+      "criterion": "A 列时间步长 60 s，第 1 行为距离 0–2 cm 步长 0.1 cm 且末列对应「药材表面」；域外位置留空，4 位小数",
+      "source_sentence": ["S21"]
+    },
+
+    {
+      "id": "X-C1", "subproblem": 1, "name": "数值解可信度的内部一致性验证（无实测数据下的必要替代）", "judge": "semantic",
+      "criterion": "在缺少药材内部实测剖面的条件下，用网格无关性（至少 3 套径向网格）、时间步无关性（至少 3 个步长）、与常物性线性情形半解析解对照、以及水分总量守恒残差四项证据支撑数值解可信",
+      "source_sentence": ["S8"],
+      "falsifiable_check": "断言存在网格收敛表：细化网格后关键量（如 1800 s 时中心温度、表面浓度）相对变化 < 0.5%；断言存在时间步收敛表，同样标准；断言问题1 的温度场与「常物性 + 时变 Robin 边界」的级数半解析解在若干时刻的最大偏差 < 1%（问题1 因物性恒定、传热与传质单向解耦，此对照可行）；断言输出了逐时刻水分总量收支残差序列。任一证据缺失即判不成立并 raise（不得以「结果看起来合理」代替）",
+      "note": "DATA_FACTS.json 已记录 T(r,t)、C(r,t) 的 has_data=false —— 正文禁止使用「与实测吻合良好」这类表述"
+    }
+  ]
+}

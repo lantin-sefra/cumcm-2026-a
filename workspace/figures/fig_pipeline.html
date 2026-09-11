@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin:0; padding:0; background:transparent; }
+  * { box-sizing:border-box; border-radius:0 !important; box-shadow:none !important; }
+  .fig, .fig * { font-style:normal !important; }
+
+  .fig {
+    width: fit-content;
+    display:grid;
+    grid-template-columns: 66px 900px 66px;
+    background:transparent; padding:24px;
+    font-family:"Times New Roman","SimSun","Songti SC","Source Han Serif SC",serif;
+    color:#000; font-size:23px; line-height:1.40;
+  }
+
+  .node { border:1px solid #000; background:#ffffff; padding:11px 14px;
+          display:flex; flex-direction:column; justify-content:center; }
+
+  .down { display:flex; justify-content:center; align-items:flex-start; }
+  .down .pad { flex:0 0 44px; }
+  .down .brlbl { flex:0 0 44px; padding-left:10px; }
+  .down .stem { display:flex; flex-direction:column; align-items:center; }
+  .down .seg { display:block; width:0; border-left:1px solid #000; height:19px; }
+  .down .tall { height:34px; }
+  .down .tip { display:block; width:0; height:0;
+               border-left:5px solid transparent; border-right:5px solid transparent;
+               border-top:8px solid #000; }
+
+  .vseg { display:flex; justify-content:center; }
+  .vseg span { display:block; width:0; height:16px; border-left:1px solid #000; }
+
+  .merge { margin-left:450px; height:0; border-top:1px solid #000; }
+
+  .chL { border-left:1px solid #000; }
+  .chR { border-right:1px solid #000; }
+
+  /* 侧通道竖直段旁的分支标签 */
+  .runL { display:flex; align-items:center; border-left:1px solid #000; }
+  .runL span { margin-left:8px; }
+  .runR { display:flex; align-items:center; justify-content:flex-end; border-right:1px solid #000; }
+  .runR span { margin-right:8px; }
+
+  .corner { display:flex; flex-direction:column; }
+  .corner .up   { flex:1 1 0%; }
+  .corner .dn   { flex:1 1 0%; }
+  .corner .bar  { height:0; border-top:1px solid #000; }
+  .corner .barA { display:flex; align-items:center; }
+  .corner .barA .ln { flex:1 1 auto; height:0; border-top:1px solid #000; }
+  .corner .barA .tipR { width:0; height:0;
+                        border-top:5px solid transparent; border-bottom:5px solid transparent;
+                        border-left:8px solid #000; }
+  /* 116px = 组框上边框+内边距(16) + 组标题(32) + 间距(8) + 子框①半高(60)，
+     使回路箭头正对子框①的左边中点 */
+  .corner .toStep1 { flex:0 0 116px; }
+  /* 68px = r10 行高(42) + 判断二半高(26)，使横出段正对判断二右边中点 */
+  .corner .upLbl { flex:0 0 68px; display:flex; align-items:flex-end; justify-content:flex-end; }
+  .corner .upLbl span { margin-right:8px; }
+
+  .grp { border:1px solid #000; background:#ffffff; padding:15px; }
+  .grptitle { letter-spacing:0.06em; margin-bottom:8px; }
+  .band { display:flex; align-items:stretch; }
+  .step { width:156px; border:1px solid #000; background:#ffffff;
+          padding:11px 12px; display:flex; align-items:center; }
+  .step[data-mh-focus="true"] { border-width:1.4px; }
+  .sarrow { width:22px; display:flex; align-items:center; }
+  .sarrow .ln { flex:1 1 auto; height:0; border-top:1px solid #000; }
+  .sarrow .tipR { width:0; height:0;
+                  border-top:5px solid transparent; border-bottom:5px solid transparent;
+                  border-left:8px solid #000; }
+</style>
+</head>
+<body>
+<div class="fig" data-mh-palette="mono">
+
+  <!-- r1 起始 -->
+  <div class="node" style="grid-column:2; grid-row:1" data-mh-node="true">
+    起始：读入环境时序与物性表，设定控制体数 N、时间步长 Δt 与初始温度、浓度场
+  </div>
+
+  <div class="vseg" style="grid-column:2; grid-row:2"><span></span></div>
+
+  <!-- r3 时间循环回流的水平合并线 -->
+  <div class="merge" style="grid-column:2 / 4; grid-row:3"></div>
+
+  <div class="down" style="grid-column:2; grid-row:4">
+    <div class="stem"><span class="seg"></span><span class="tip"></span></div>
+  </div>
+  <div class="chR" style="grid-column:3; grid-row:4"></div>
+
+  <!-- r5 时间步进 -->
+  <div class="node" style="grid-column:2; grid-row:5" data-mh-node="true">
+    时间步进：推进到下一时刻，问题四同步取该时刻的实测半径与其变化率
+  </div>
+  <div class="chR" style="grid-column:3; grid-row:5"></div>
+
+  <div class="down" style="grid-column:2; grid-row:6">
+    <div class="stem"><span class="seg"></span><span class="tip"></span></div>
+  </div>
+  <div class="chR" style="grid-column:3; grid-row:6"></div>
+
+  <!-- r7 保序算子分裂组 -->
+  <div class="grp" style="grid-column:2; grid-row:7">
+    <div class="grptitle">同步更新物性的保序分裂（本步内五步顺序不可交换）</div>
+    <div class="band">
+      <div class="step" data-mh-node="true" data-mh-row="1">① 由旧场更新密度、比热、导热</div>
+      <div class="sarrow"><span class="ln"></span><span class="tipR"></span></div>
+      <div class="step" data-mh-node="true" data-mh-row="1">② 隐式求解温度三对角系统</div>
+      <div class="sarrow"><span class="ln"></span><span class="tipR"></span></div>
+      <div class="step" data-mh-node="true" data-mh-focus="true" data-mh-row="1">③ 用刚更新的温度算扩散系数</div>
+      <div class="sarrow"><span class="ln"></span><span class="tipR"></span></div>
+      <div class="step" data-mh-node="true" data-mh-row="1">④ 隐式求解浓度三对角系统</div>
+      <div class="sarrow"><span class="ln"></span><span class="tipR"></span></div>
+      <div class="step" data-mh-node="true" data-mh-row="1">⑤ 对新浓度场施加非负下界</div>
+    </div>
+  </div>
+  <!-- Picard 回路：自判断一左出，上行后指回子框① -->
+  <div class="corner" style="grid-column:1; grid-row:7">
+    <div class="toStep1"></div>
+    <div class="barA"><span class="ln"></span><span class="tipR"></span></div>
+    <div class="dn chL"></div>
+  </div>
+  <div class="chR" style="grid-column:3; grid-row:7"></div>
+
+  <div class="down" style="grid-column:2; grid-row:8">
+    <div class="stem"><span class="seg tall"></span><span class="tip"></span></div>
+  </div>
+  <div class="runL" style="grid-column:1; grid-row:8"><span>是</span></div>
+  <div class="chR" style="grid-column:3; grid-row:8"></div>
+
+  <!-- r9 判断一：Picard 复核 -->
+  <div class="node" style="grid-column:2; grid-row:9" data-mh-node="true">
+    判断：本步落在 Picard 复核步，且物性相对变化未低于 10⁻⁶？
+  </div>
+  <div class="corner" style="grid-column:1; grid-row:9">
+    <div class="up chL"></div>
+    <div class="bar"></div>
+    <div class="dn"></div>
+  </div>
+  <div class="chR" style="grid-column:3; grid-row:9"></div>
+
+  <div class="down" style="grid-column:2; grid-row:10">
+    <span class="pad"></span>
+    <div class="stem"><span class="seg tall"></span><span class="tip"></span></div>
+    <span class="brlbl">否</span>
+  </div>
+
+  <!-- r11 判断二：终止判据 -->
+  <div class="node" style="grid-column:2; grid-row:11" data-mh-node="true">
+    判断：全域最大含水率已降到题给阈值以下？
+  </div>
+  <!-- 时间循环回路：自判断二右出，上行至 r3 合并线；「否」贴在拐角上方 -->
+  <div class="corner" style="grid-column:3; grid-row:10 / 12">
+    <div class="upLbl chR"><span>否</span></div>
+    <div class="bar"></div>
+    <div class="dn"></div>
+  </div>
+
+  <div class="down" style="grid-column:2; grid-row:12">
+    <span class="pad"></span>
+    <div class="stem"><span class="seg tall"></span><span class="tip"></span></div>
+    <span class="brlbl">是</span>
+  </div>
+
+  <!-- r13 输出 -->
+  <div class="node" style="grid-column:2; grid-row:13" data-mh-node="true">
+    终止：在跨越阈值的输出区间上线性插值定出口时刻，导出径向浓度分布与达标时长
+  </div>
+
+</div>
+</body>
+</html>

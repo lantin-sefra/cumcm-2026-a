@@ -1,0 +1,13 @@
+﻿scenario,description,appendix,domain,R_cm,chi,role,t_end_h,reached,mass_resid_rel
+S0,问题3基线（附录3，固定R=2cm）,3,固定,2.0000,n.a.,deliverable,56.7087,True,2.081e-15
+S1,仅换物性（附录4，固定R=2cm）,4,固定,2.0000,n.a.,control,128.5937,True,1.974e-15
+S2,换物性+收缩（主用，χ=0）,4,R(t),,0,deliverable,52.1896,True,7.515e-16
+S3,换物性+收缩（替代闭合，χ=1）,4,R(t),,1,control,50.6940,True,2.005e-16
+S4,末态半径界（附录4，固定R=1.198cm）,4,固定,1.1980,n.a.,control,47.4146,True,5.348e-15
+
+# 效应分解 式(24): t_S2-t_S0 = (t_S1-t_S0)+(t_S2-t_S1)
+component,value_h
+换物性(t_S1-t_S0),71.8850
+加收缩(t_S2-t_S1),-76.4041
+净差(t_S2-t_S0),-4.5191
+加性恒等残差,7.11e-15

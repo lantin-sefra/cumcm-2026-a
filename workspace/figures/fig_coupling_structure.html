@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin:0; padding:0; background:transparent; }
+  * { box-sizing:border-box; border-radius:0 !important; box-shadow:none !important; }
+  .fig, .fig * { font-style:normal !important; }
+
+  .fig {
+    width: fit-content;
+    display:flex; flex-direction:column; align-items:stretch;
+    background:transparent; padding:24px;
+    font-family:"Times New Roman","SimSun","Songti SC","Source Han Serif SC",serif;
+    color:#000; font-size:22px; line-height:1.40;
+  }
+
+  .row { width:760px; display:flex; align-items:stretch; }
+
+  .node { border:1px solid #000; background:#ffffff; padding:11px 14px;
+          display:flex; flex-direction:column; justify-content:center; }
+  .hd { font-weight:700; letter-spacing:0.06em; margin-bottom:4px; }
+
+  .down { display:flex; flex-direction:column; align-items:center; }
+  .down .seg { display:block; width:1px; height:22px; background:#000; }
+  .down .tip { display:block; width:0; height:0;
+               border-left:5px solid transparent; border-right:5px solid transparent;
+               border-top:8px solid #000; }
+
+  /* 双向耦合环：两条有向边关于通道中线对称，各自紧贴自己的文字标注 */
+  .cyc { width:320px; display:flex; flex-direction:column; justify-content:center; }
+  .elbl { text-align:center; }
+  .aline { display:flex; align-items:center; }
+  .aline .ln { flex:1 1 auto; height:1px; background:#000; }
+  .aline .tipL { width:0; height:0;
+                 border-top:5px solid transparent; border-bottom:5px solid transparent;
+                 border-right:8px solid #000; }
+  .aline .tipR { width:0; height:0;
+                 border-top:5px solid transparent; border-bottom:5px solid transparent;
+                 border-left:8px solid #000; }
+  .cycgap { height:40px; }
+
+  /* 注释引出线：虚线、无箭头，表示注记而非流程 */
+  .lead { display:flex; flex-direction:column; align-items:center; }
+  .lead .bar { width:320px; height:0; border-top:1px dashed #000; }
+  .lead .drop { width:0; height:28px; border-left:1px dashed #000; }
+
+  .c220 { width:220px; }
+  .c320 { width:320px; }
+  .c760 { width:760px; }
+</style>
+</head>
+<body>
+<div class="fig" data-mh-palette="mono">
+
+  <!-- 环境驱动：经第三类边界同时作用于两个场 -->
+  <div class="row">
+    <div class="node c760" data-mh-node="true" data-mh-row="1">
+      附件 1 环境时序：热风温湿度随时间变化，经第三类边界驱动两个场
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="down c220" data-mh-col="1"><span class="seg"></span><span class="tip"></span></div>
+    <div class="c320"></div>
+    <div class="down c220" data-mh-col="2"><span class="seg"></span><span class="tip"></span></div>
+  </div>
+
+  <!-- 两场与双向耦合的两条有向边 -->
+  <div class="row">
+    <div class="node c220" data-mh-node="true" data-mh-row="2" data-mh-col="1">
+      <div class="hd">温度场</div>
+      <div>径向导热方程</div>
+      <div>表面对流换热</div>
+    </div>
+
+    <div class="cyc" data-mh-row="2">
+      <div class="elbl">密度、比热、导热随含水率</div>
+      <div class="aline"><span class="tipL"></span><span class="ln"></span></div>
+      <div class="cycgap"></div>
+      <div class="aline"><span class="ln"></span><span class="tipR"></span></div>
+      <div class="elbl">扩散系数含温度因子</div>
+    </div>
+
+    <div class="node c220" data-mh-node="true" data-mh-row="2" data-mh-col="2">
+      <div class="hd">含水率场</div>
+      <div>径向扩散方程</div>
+      <div>表面对流传质</div>
+    </div>
+  </div>
+
+  <!-- 虚线引出的启用状态注记 -->
+  <div class="row lead"><span class="bar"></span><span class="drop"></span></div>
+
+  <div class="row">
+    <div class="node c760" data-mh-node="true" data-mh-row="3">
+      <div class="hd">两条边在各附录下的启用状态</div>
+      <div>附录 2：物性为常数、扩散系数不含温度，两条边同时断开，温度场退化为可独立求解的线性问题</div>
+      <div>附录 3 与附录 4：两条边同时生效，两个场必须在同一时间步内同步推进</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

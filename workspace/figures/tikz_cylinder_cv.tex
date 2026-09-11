@@ -1,0 +1,94 @@
+% 图契约（tikz_cylinder_cv）
+%   purpose: 说明圆柱径向有限体积的控制体划分与三类控制体的体积/通量写法
+%   topology: geometry（截面扇形 + 同一坐标系下的径向坐标轴，单幅连续示意）
+%   node_roles: 网格结点（实心圆点）/ 控制体界面（虚线弧）/ 注记（文字块）
+%   edge_roles: 实体边界（实线）/ 界面（虚线）/ 对称轴与延长（点划线）/ 表面通量（实心箭头）
+%   style_family: G1 几何（辅以 G2 机理：表面第三类边界通量）
+%   annotation_policy: 短公式紧贴其解释的区域；长推导留正文
+%   result_policy: none（不出现任何数值结果）
+%   final_width: 12.4cm 设计宽度，论文按 0.86\textwidth 插入
+%   print_mode: 纯黑白线稿，线型承担语义，不依赖颜色
+\documentclass[border=4pt]{standalone}
+% 本机 MiKTeX 的 expl3 为 2024-01-04，低于 ctex/xeCJK 的下限；fontspec 可用，
+% 故直接绑定宋体，中文换行全部用显式 \\ 控制（不依赖 CJK 自动断行）。
+\usepackage{fontspec}
+\setmainfont{SimSun}
+\usepackage{amsmath}
+% 下标默认取基号 2/3，按 0.86\textwidth 插入后降到 6pt 以下；抬到 8.4pt 使
+% 论文成图内最小字号仍在 8pt 以上（figure_pdf_quality_check 的印刷字号下限）。
+\DeclareMathSizes{9}{9}{8.4}{8.4}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\tikzset{
+  % 语义线型令牌：全部为纯黑，层次由线宽与虚实承担（黑白打印与色盲环境等效可读）
+  entity/.style   = {draw=black, line width=0.9pt},
+  spine/.style    = {draw=black, line width=1.3pt},
+  cvface/.style   = {draw=black, line width=0.6pt, dashed},
+  auxline/.style  = {draw=black, line width=0.5pt,
+                     dash pattern=on 5pt off 2pt on 1pt off 2pt},
+  fluxarrow/.style= {draw=black, line width=0.9pt, -{Latex[length=2.6mm]}},
+  dimline/.style  = {draw=black, line width=0.5pt,
+                     {Latex[length=1.8mm]}-{Latex[length=1.8mm]}},
+  gridnode/.style = {circle, fill=black, inner sep=0pt, minimum size=3.4pt},
+}
+
+\begin{document}
+\adjustbox{max width=\textwidth}{%
+\begin{tikzpicture}[font=\small]
+
+  % ---- 截面扇形：实线为物理实体边界 ----
+  \draw[spine]  (0,0) -- (7.6,0);
+  \draw[entity] (0,0) -- (45:7.6);
+  \draw[spine]  (0:7.6) arc[start angle=0, end angle=45, radius=7.6];
+  % 点划线弧：示意横截面在扇形之外继续，不是新的实体边界
+  \draw[auxline] (45:7.6) arc[start angle=45, end angle=62, radius=7.6];
+
+  % ---- 控制体界面：虚线弧，与径向轴正交 ----
+  \foreach \rho in {0.7, 1.9, 3.3, 4.7, 6.1, 6.9}
+    \draw[cvface] (0:\rho) arc[start angle=0, end angle=45, radius=\rho];
+
+  % ---- 网格结点与省略的控制体 ----
+  \foreach \x in {0, 2.6, 4.0, 5.4, 7.6} \node[gridnode] at (\x,0) {};
+  \node at (1.3,0.30) {$\cdots$};
+  \node at (6.5,0.30) {$\cdots$};
+
+  \node[anchor=north] at (0,-0.42)   {$r_0\!=\!0$};
+  \node[anchor=north] at (2.6,-0.42) {$r_{i-1}$};
+  \node[anchor=north] at (4.0,-0.42) {$r_i$};
+  \node[anchor=north] at (5.4,-0.42) {$r_{i+1}$};
+  \node[anchor=north] at (7.6,-0.42) {$r_N\!=\!R$};
+
+  % ---- 界面标号：沿斜边向外引出，避免压住弧线 ----
+  \draw[auxline] (45:3.3) -- (45:3.8);
+  \node[anchor=south east] at (45:3.8) {$r_{i-1/2}$};
+  \draw[auxline] (45:4.7) -- (45:5.2);
+  \node[anchor=south east] at (45:5.2) {$r_{i+1/2}$};
+
+  % ---- 中心对称轴 ----
+  \draw[auxline] (0,0) -- (0,5.4);
+  \node[anchor=west, text width=2.9cm] at (0.15,5.25)
+       {对称轴\\[1pt] $\partial\varphi/\partial r|_{r=0}=0$};
+
+  % ---- 表面第三类边界：外法向通量 ----
+  \draw[fluxarrow] (35:7.6) -- (35:8.7);
+  \node[anchor=west, text width=4.3cm] at (7.25,5.05)
+       {表面第三类边界，外向通量\\[1pt] $q_N=2\pi R\beta\,(\varphi_{\mathrm{air}}-\varphi_N)$};
+
+  % ---- 控制体宽度：双向尺寸线置于形体之外 ----
+  \draw[auxline] (3.3,-0.15) -- (3.3,-1.70);
+  \draw[auxline] (4.7,-0.15) -- (4.7,-1.70);
+  \draw[dimline] (3.3,-1.50) -- (4.7,-1.50);
+  \node[anchor=north] at (4.0,-1.62) {$\Delta r$};
+
+  % ---- 三类控制体的体积写法：各自置于对应径向区段之下 ----
+  \node[anchor=north, align=center, text width=2.6cm] at (0.5,-2.90)
+       {中心控制体\\[1pt] $V_0=\pi(\Delta r/2)^2$};
+  \node[anchor=north, align=center, text width=2.8cm] at (4.0,-2.90)
+       {内部控制体\\[1pt] $V_i=2\pi r_i\Delta r$};
+  \node[anchor=north, align=center, text width=3.4cm] at (7.4,-2.90)
+       {表面控制体\\[1pt] $V_N=\pi(R-r_{N-1/2})(R+r_{N-1/2})$};
+
+\end{tikzpicture}
+}%
+\end{document}
