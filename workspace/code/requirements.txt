@@ -1,0 +1,7 @@
+# 2026 CUMCM A 题数值求解依赖（在 workspace/ 下运行：python code/main.py）
+# 版本为已验证可跑通全流程（main.py + figures/*.py）的组合。
+numpy==2.4.4
+scipy==1.18.1
+pandas==3.0.5
+openpyxl==3.1.5
+matplotlib==3.11.1
