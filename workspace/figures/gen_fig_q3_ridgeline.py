@@ -7,7 +7,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _figcommon import (C, load, newfig, finish, seq_colors,  # noqa: E402
-                        nearest_idx, SEC_PER_HOUR)
+                        nearest_idx, SEC_PER_HOUR, C0)
 
 d = load('p3')
 t = d['t']
@@ -17,8 +17,15 @@ hours = list(np.arange(0.0, np.floor(t_end / 6.0) * 6.0 + 0.1, 6.0)) + [t_end]
 idx = [nearest_idx(t, h * SEC_PER_HOUR) for h in hours]
 cols = seq_colors(len(hours), 'blue')
 
+# result3.xlsx 第一行是 t=60s。0.0 h 必须用精确均匀初值，不能把 60s 薄边界层标成 t=0。
+prof = []
+for h, i in zip(hours, idx):
+    if abs(float(h)) < 1e-12:
+        prof.append(np.full(r.shape, C0))
+    else:
+        prof.append(d['Ccol'][i])
+
 # 山脊图基线间距：按最大剖面幅度定，保证相邻脊线不互穿
-prof = [d['Ccol'][i] for i in idx]
 step = 0.34
 fig = newfig(6.4, 4.4, width_fraction=0.9)
 ax = fig.add_subplot(1, 1, 1)
