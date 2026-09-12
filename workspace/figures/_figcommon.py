@@ -42,6 +42,7 @@ OUTDIR = os.path.join(ROOT, 'figures')
 C_TH = 0.15          # kg/kg 达标阈值
 R0_CM = 2.0          # cm 初始半径
 SEC_PER_HOUR = 3600.0
+C0 = 2.55            # 初始干基含水率 kg/kg（收缩域首帧插值，不参与求解）
 
 
 def _sheet_array(path, sheet_index=0):
@@ -120,6 +121,14 @@ def _moving_result():
     Cfixed = np.asarray([row[1:-1] for row in result_rows], dtype=float)
     Csurface = np.asarray([row[-1] for row in result_rows], dtype=float)
     wb.close()
+
+    # result4.xlsx 第一行是 t=60s，没有 t=0 记录。t=0 的均匀初值是已知精确值
+    # （R0_CM、C0，与 code/params.py 一致）。补上它，避免 nearest_idx(0.0 h)
+    # 取到 60s 已形成的薄边界层，再和 0.1cm 粗网格列拼接出虚假折线。
+    t = np.insert(t, 0, 0.0)
+    Cfixed = np.vstack([np.full(radii.shape, C0), Cfixed])
+    Csurface = np.insert(Csurface, 0, C0)
+
     radius_path = os.path.join(ROOT, 'user_data', '附件', '附件', '附件2.xlsx')
     wb = load_workbook(radius_path, read_only=True, data_only=True)
     rows = [row for row in wb.active.iter_rows(min_row=2, values_only=True)
