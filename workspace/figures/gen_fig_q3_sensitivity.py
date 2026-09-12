@@ -1,7 +1,8 @@
 """fig_q3_sensitivity — 问题3 达标时长单因子灵敏度（正式诊断）。
 
 数据源只允许 output/final_diagnostics/q3_sensitivity_final.csv。
-正式口径：基准为正式 Q3（N=2560, 57.4716 h），χ 扰动为 1→0。
+正式口径：基准为正式 Q3（N=2560, 57.4716 h）。
+χ 闭合差是问题四内部对照，留给 fig_chi_closure，不画在本图。
 """
 import os
 import sys
@@ -17,7 +18,7 @@ df.columns = [c.strip().lstrip('\ufeff') for c in df.columns]
 base = float(df.loc[df['case_id'] == 'BASE', 't_end_h'].iloc[0])
 if abs(base - 57.4716) > 5e-4:
     raise RuntimeError('灵敏度基准偏离正式 Q3：%.6f h' % base)
-print('[source] N=2560  dt=0.25s  BASE=%.4f h  χ: 1→0' % base, flush=True)
+print('[source] N=2560  dt=0.25s  BASE=%.4f h' % base, flush=True)
 
 rows = df[df['case_id'] != 'BASE'].copy()
 rows['dev'] = rows['delta_h_vs_BASE'].astype(float)
@@ -29,7 +30,6 @@ labels = {
     'T_air_plateau_after_4h': '空气温度平台值',
     'C_air_plateau_after_4h': '空气含湿平台值',
     'surface_boundary_type': '表面边界条件改 Dirichlet',
-    'chi_closure_Q4': '移动边界闭合 $\\chi$: 1→0',
     'latent_heat_sink': '蒸发潜热汇（结构性）',
     'C_th': '达标阈值 $C_{th}$: 0.15→0.2',
 }
