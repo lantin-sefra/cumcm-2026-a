@@ -18,6 +18,7 @@ python code/main.py
 ## 顶层
 
 ```
+codex/paper_commit_2026912/
 ├── workspace/             # 项目工作区
 ├── README_STRUCT.md       # 本文件：项目结构
 ├── README.md              # 导出说明与运行方式
