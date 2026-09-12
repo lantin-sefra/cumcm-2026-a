@@ -62,7 +62,7 @@ print('[source] bins=%d  C_high=%.4f→C_low=%.4f  rho=%.1f→%.1f  '
 
 # 轴名拆两行（符号 / 单位）：量程写进同一个刻度标签时，长串会与相邻轴重叠。
 names = ['$\\rho$\n(kg/m³)', '$c_p$\n(J/(kg·K))', '$k$\n(W/(m·K))',
-         '$D$\n(m²/s)', '$T$\n(℃)']
+         '$D$\n(m²/s)', '$T$\n($^{\\circ}$C)']
 lo = rows.min(axis=0)
 hi = rows.max(axis=0)
 norm = (rows - lo) / np.where(hi - lo > 0, hi - lo, 1.0)
