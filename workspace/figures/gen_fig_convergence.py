@@ -25,7 +25,8 @@ gs = fig.add_gridspec(1, 2, wspace=0.30)
 ax1 = fig.add_subplot(gs[0, 0])
 ax2 = fig.add_subplot(gs[0, 1])
 
-# (a) 空间收敛：Q3 正式 N=2560，Q4 正式 N=1280
+# (a) 空间收敛，整条曲线都是 Δt=1 s。菱形标的是正式选用的 N，
+# 对应纵坐标仍是 Δt=1 s 的扫点，不是正式 Δt=0.25 s 的 57.4716 / 51.0869。
 ax1.plot(Ns, q3_N, color=C['blue_main'], lw=1.6, marker=M[0], ms=5.0,
                )
 ax1.plot(Ns, q4_N, color=C['green_3'], lw=1.6, marker=M[1], ms=5.0,
@@ -45,9 +46,9 @@ ax1.set_ylim(50.7, 57.7)
 ax1.set_xticks(Ns)
 ax1.set_xticklabels(['40', '80', '160', '320', '640', '1280', '2560'])
 ax1.set_yticks(np.arange(51.0, 57.1, 2.0))
-ax1.text(45.0, 57.18, 'Q3｜正式 $N$=2560',
+ax1.text(45.0, 57.18, 'Q3｜$N$=2560｜$\\Delta t$=1 s',
          color=C['neutral_black'])
-ax1.text(45.0, 51.28, 'Q4｜正式 $N$=1280', color=C['neutral_dark'])
+ax1.text(45.0, 51.28, 'Q4｜$N$=1280｜$\\Delta t$=1 s', color=C['neutral_dark'])
 panel(ax1, '(a)')
 
 # (b) 时间步收敛：两问正式均取 Δt=0.25 s
