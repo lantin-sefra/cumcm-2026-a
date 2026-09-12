@@ -451,14 +451,18 @@ def run_all(shared=None):
 
     validation = {
         "problem": "2026-CUMCM-A-herb-drying",
-        "delivery_grid": {"N": P.N_CV, "dt_policy_P1": "1s", "dt_policy_P234": "seg(2->4)s"},
+        "delivery_grid": {
+            "P1": {"N": P.N_P1_CV, "dt_s": P.DT_P1},
+            "P2_P3": {"N": P.N_P23_CV, "dt_s": P.DT_P23},
+            "P4": {"N": P.N_P4_CV, "dt_s": P.DT_P4},
+        },
         "radius_frozen": radius_frozen,
         "evidence_section9": ev,
         "constraints": checks,
         "sensitivity": sa_summary,
         "t_end_summary_h": {
-            "P3_S0": r3["t_end_h"], "P4_S2_chi0_primary": r4["t_end_h"],
-            "P4_S3_chi1_alt": s4["chi_closure"]["S3_chi1_h"],
+            "P3_S0": r3["t_end_h"], "P4_S2_chi1_primary": r4["t_end_h"],
+            "P4_S3_chi0_crosscheck": s4["chi_closure"]["S3_chi0_crosscheck_h"],
             "chi_closure_diff_rel": s4["chi_closure"]["diff_rel"]},
         "all_pass": bool(all_pass),
     }

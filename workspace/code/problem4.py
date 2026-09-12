@@ -1,13 +1,9 @@
-"""问题4：附录4 + 移动边界收缩域 + 四情景效应隔离（MODELING_REPORT §7）。
+"""问题4：附录4 + 实测 R(t) + χ=1 材料随动 ALE 主模型。
 
-主用情景 S2（附录4、R(t) 收缩、χ=0 含 Landau 对流项）给出交付时长与表6/result4；
-效应隔离 S0–S4 在同一离散/环境/判据下运行，得式(24) 的加性分解（K19、H24）：
-    t_S2 − t_S0 = (t_S1 − t_S0) + (t_S2 − t_S1)   ——「换物性」+「加收缩」两项。
-⛔ S1（附录4 固定 R=2cm）为人为对照、物理不自洽（附录4 描述会收缩的药材），
-   role='control'、不受 K9/K10 约束、不作交付（§7.6）。
+正式结果、表6与result4只由χ=1主模型生成；χ=0仅作为Eulerian/Landau交叉验证。
+S0、S1、S4保留为程序内部兼容性诊断，不作为论文正式效应分解结果。
 ⛔ 表6 末列是「药材表面」r=R(t)（非固定 2cm），域外 r>R(t) 置空（式26，§7.7）。
-INC1：附录4 的 ρ(C) 与附件2 的 R(t) 在严格干物质守恒下差 13.42%，仅作诊断量
-   （mass_consistency.csv），不作收敛判据、不修正实测半径（§7.3）。
+附加质量自洽量仅作程序诊断，不作收敛判据，也不修正附件2实测半径。
 """
 from __future__ import annotations
 
@@ -36,11 +32,16 @@ def _row_labels_6h(t_end_s):
     return out
 
 
-def _run(name, appendix, geom, chi, t_max_s, role="deliverable", store_nodes=False):
-    """统一以交付离散（N=40、seg 步长、60 s 输出）推进一个情景。"""
+def _run(
+    name, appendix, geom, chi, t_max_s, role="deliverable", store_nodes=False,
+    N=P.N_P4_CV, dt_policy="const", dt_const=P.DT_P4,
+):
+    """按可独立指定的 Q4 数值参数推进一个情景。"""
     cfg = D.CaseConfig(name=name, appendix=appendix, geom=geom, chi=chi,
-                       dt_policy="seg", save_dt_s=P.P34_SAVE_DT_S,
-                       t_max_s=t_max_s, detect_end=True, role=role,
+                       N=N, dt_policy=dt_policy, dt_const=dt_const,
+                       save_dt_s=P.P34_SAVE_DT_S,
+                       t_max_s=t_max_s, detect_end=True, event_each_step=True,
+                       role=role,
                        store_nodes=store_nodes)
     return D.run(cfg)
 
@@ -51,25 +52,26 @@ def _surf_at(res, t_query_s):
 
 
 def solve(write=True):
-    # ---- 主用 S2：附录4 + R(t) + χ=0，保存全节点供表6/result4 ----
-    res = _run("S2", 4, geometry.MovingGeometry(), P.CHI_PRIMARY,
+    # ---- 正式Q4：附录4 + R(t) + χ=1，保存全节点供表6/result4 ----
+    res = _run("S2", 4, geometry.MovingGeometry(), P.CHI_P4_PRIMARY,
                P.T_END_MAX_S, role="deliverable", store_nodes=True)
     if not res["reached"]:
         raise RuntimeError("问题4 主用情景 S2 未在 120 h 内达标（按 §13.3 自查 E1–E10）")
     t_end_s = res["t_end_s"]
 
-    # ---- 效应隔离其余情景（S0/S1/S3/S4）----
+    # ---- 兼容诊断；S3为χ=0交叉验证，其他情景不进入论文正式结果 ----
     r_s0 = _run("S0", 3, geometry.FixedGeometry(P.R0_M), 0, P.T_END_MAX_S)
     r_s1 = _run("S1", 4, geometry.FixedGeometry(P.R0_M), 0, 150.0 * P.SEC_PER_HOUR,
                 role="control")                         # 对照，需 >120h 才达标
-    r_s3 = _run("S3", 4, geometry.MovingGeometry(), P.CHI_ALT, P.T_END_MAX_S)
+    r_s3 = _run("S3", 4, geometry.MovingGeometry(), P.CHI_P4_CROSSCHECK,
+                P.T_END_MAX_S)
     r_s4 = _run("S4", 4, geometry.FixedGeometry(P.R_END_M), 0, P.T_END_MAX_S)
 
     scen = [
         ("S0", "问题3基线（附录3，固定R=2cm）", 3, "固定", P.R0_CM, "n.a.", "deliverable", r_s0),
         ("S1", "仅换物性（附录4，固定R=2cm）", 4, "固定", P.R0_CM, "n.a.", "control", r_s1),
-        ("S2", "换物性+收缩（主用，χ=0）", 4, "R(t)", np.nan, 0, "deliverable", res),
-        ("S3", "换物性+收缩（替代闭合，χ=1）", 4, "R(t)", np.nan, 1, "control", r_s3),
+        ("S2", "换物性+收缩（主用ALE，χ=1）", 4, "R(t)", np.nan, 1, "deliverable", res),
+        ("S3", "换物性+收缩（Eulerian/Landau交叉验证，χ=0）", 4, "R(t)", np.nan, 0, "control", r_s3),
         ("S4", "末态半径界（附录4，固定R=1.198cm）", 4, "固定", P.R_END_CM, "n.a.", "control", r_s4),
     ]
     tS0, tS1, tS2, tS3 = (r_s0["t_end_h"], r_s1["t_end_h"],
@@ -96,13 +98,13 @@ def solve(write=True):
                                 R_consistent, inc1_rel)
 
     summary = {
-        "problem": 4, "appendix": 4, "N": res["N"], "dt_s": "seg(2→4)",
-        "chi_primary": P.CHI_PRIMARY,
+        "problem": 4, "appendix": 4, "N": res["N"], "dt_s": P.DT_P4,
+        "chi_primary": P.CHI_P4_PRIMARY,
         "t_end_h": tS2, "t_end_s": t_end_s,
-        "t_end_label": f"S2 χ=0, N={res['N']}, Δt=seg(2→4)s → t_end={tS2:.3f} h",
-        "maxC_at_end": float(res["maxC"][int(np.argmin(np.abs(res["t"] - t_end_s)))]),
+        "t_end_label": f"S2 χ=1, N={res['N']}, Δt={P.DT_P4:g}s → t_end={tS2:.3f} h",
+        "maxC_at_end": float(np.max(res["end_C"])),
         "radius_frozen": res["radius_frozen"],
-        "R_at_end_cm": float(np.interp(t_end_s, res["t"], res["R"])) / P.CM_TO_M,
+        "R_at_end_cm": float(res["end_R"]) / P.CM_TO_M,
         "mass_resid_rel": res["mass_resid_rel"],
         "picard_iters_max": res["picard_iters_max"],
         "picard_nonconv": res["picard_nonconv"],
@@ -114,7 +116,7 @@ def solve(write=True):
             "identity_lhs": net_h, "identity_rhs": prop_h + shrink_h,
             "identity_resid_h": abs(net_h - (prop_h + shrink_h)),
         },
-        "chi_closure": {"S2_chi0_h": tS2, "S3_chi1_h": tS3,
+        "chi_closure": {"S2_chi1_primary_h": tS2, "S3_chi0_crosscheck_h": tS3,
                         "diff_h": chi_diff_h, "diff_rel": chi_diff_rel},
         "inc1": {"ratio_actual": ratio_actual, "ratio_required": ratio_req,
                  "rel_diff": inc1_rel, "R_consistent_cm": R_consistent,
@@ -155,7 +157,7 @@ def _write_result4(res, t_end_s):
 
 
 def _write_effect_isolation(scen, prop_h, shrink_h, net_h):
-    """effect_isolation.csv：S0–S4 五行 + 式(24) 加性分解（K19/H24）。"""
+    """写出内部兼容性诊断；不作为论文正式效应分解结果。"""
     path = P.OUTPUT_DIR / "effect_isolation.csv"
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8-sig") as f:

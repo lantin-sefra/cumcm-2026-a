@@ -44,8 +44,125 @@ R0_CM = 2.0          # cm 初始半径
 SEC_PER_HOUR = 3600.0
 
 
+def _sheet_array(path, sheet_index=0):
+    """将最终 Excel 的一个工作表读成时间、半径与场数组（仅作绘图适配）。"""
+    from openpyxl import load_workbook
+    wb = load_workbook(path, read_only=True, data_only=True)
+    ws = wb.worksheets[sheet_index]
+    rows = ws.iter_rows(values_only=True)
+    header = next(rows)
+    radii = np.asarray(header[1:], dtype=float)
+    values = [row for row in rows if row[0] is not None]
+    t = np.asarray([row[0] for row in values], dtype=float)
+    field = np.asarray([row[1:] for row in values], dtype=float)
+    wb.close()
+    return t, radii, field
+
+
+def _air_temperature(t):
+    """附件1环境温度插值；4 h 后按题目规定平台值延拓。"""
+    from openpyxl import load_workbook
+    path = os.path.join(ROOT, 'user_data', '附件', '附件', '附件1.xlsx')
+    wb = load_workbook(path, read_only=True, data_only=True)
+    rows = list(wb.active.iter_rows(min_row=2, values_only=True))
+    wb.close()
+    tx = np.asarray([row[0] for row in rows], dtype=float)
+    temp = np.asarray([row[1] for row in rows], dtype=float)
+    return np.where(t > 4.0 * SEC_PER_HOUR, 50.0, np.interp(t, tx, temp))
+
+
+def _fixed_result(tag):
+    """把 result1--result3.xlsx 转为原绘图源码所需的数组键。"""
+    number = {'p1': 1, 'p2': 2, 'p3': 3}[tag]
+    path = os.path.join(ROOT, 'output', 'result%d.xlsx' % number)
+    t, radii, first = _sheet_array(path, 0)
+    if number <= 2:
+        t2, radii2, second = _sheet_array(path, 1)
+        if not np.array_equal(t, t2) or not np.array_equal(radii, radii2):
+            raise ValueError('最终 Excel 的两个工作表坐标不一致: %s' % path)
+        Tcol, Ccol = first, second
+    else:
+        Tcol, Ccol = None, first
+
+    data = {
+        't': t,
+        'cols_cm': radii,
+        'Ccol': Ccol,
+        'Ccenter': Ccol[:, 0],
+        'Csurf': Ccol[:, -1],
+        'maxC': np.nanmax(Ccol, axis=1),
+        't_end_h': float(t[-1] / SEC_PER_HOUR),
+    }
+    # 圆柱截面的体平均含水率：2/R^2 * integral(C r dr)。
+    data['Cbar'] = 2.0 * np.trapezoid(Ccol * radii[None, :], radii, axis=1) / (radii[-1] ** 2)
+    if Tcol is not None:
+        data.update({
+            'Tcol': Tcol,
+            'Tcenter': Tcol[:, 0],
+            'Tsurf': Tcol[:, -1],
+            'T_air': _air_temperature(t),
+        })
+    return data
+
+
+def _moving_result():
+    """把 result4.xlsx 与附件2半径记录适配为原移动边界绘图数组。"""
+    from openpyxl import load_workbook
+    from scipy.interpolate import PchipInterpolator
+
+    path = os.path.join(ROOT, 'output', 'result4.xlsx')
+    wb = load_workbook(path, read_only=True, data_only=True)
+    result_rows = wb.active.iter_rows(values_only=True)
+    header = next(result_rows)
+    radii = np.asarray(header[1:-1], dtype=float)
+    result_rows = [row for row in result_rows if row[0] is not None]
+    t = np.asarray([row[0] for row in result_rows], dtype=float)
+    Cfixed = np.asarray([row[1:-1] for row in result_rows], dtype=float)
+    Csurface = np.asarray([row[-1] for row in result_rows], dtype=float)
+    wb.close()
+    radius_path = os.path.join(ROOT, 'user_data', '附件', '附件', '附件2.xlsx')
+    wb = load_workbook(radius_path, read_only=True, data_only=True)
+    rows = [row for row in wb.active.iter_rows(min_row=2, values_only=True)
+            if row[0] is not None and row[1] is not None]
+    wb.close()
+    rt = np.asarray([row[0] for row in rows], dtype=float)
+    rr = np.asarray([row[1] for row in rows], dtype=float)
+    R_cm = PchipInterpolator(rt, rr, extrapolate=False)(np.minimum(t, rt[-1]))
+
+    # 原图使用随动坐标；这里只把最终 Excel 的固定半径列插值到同一绘图坐标。
+    N = len(radii) - 1
+    xi = np.linspace(0.0, 1.0, N + 1)
+    nodesC = np.empty((len(t), N + 1), dtype=float)
+    for i, radius in enumerate(R_cm):
+        inside = radii <= radius + 1e-12
+        x = radii[inside]
+        y = Cfixed[i, inside]
+        finite = np.isfinite(y)
+        x, y = x[finite], y[finite]
+        surface = Csurface[i]
+        if np.isfinite(surface):
+            if len(x) == 0 or abs(x[-1] - radius) > 1e-12:
+                x = np.append(x, radius)
+                y = np.append(y, surface)
+            else:
+                y[-1] = surface
+        nodesC[i] = np.interp(xi * radius, x, y)
+
+    return {
+        't': t,
+        'R_m': R_cm * 1e-2,
+        'nodesC': nodesC,
+        'N': N,
+        't_end_h': float(t[-1] / SEC_PER_HOUR),
+    }
+
+
 def load(tag):
-    """读 figures/_figdata/<tag>.npz。缺文件直接 raise（禁止静默兜底出空图）。"""
+    """正式结果图读取最终 Excel；其他历史诊断图仍按原缓存读取。"""
+    if tag in ('p1', 'p2', 'p3'):
+        return _fixed_result(tag)
+    if tag == 'p4s2':
+        return _moving_result()
     path = os.path.join(FIGDATA, '%s.npz' % tag)
     if not os.path.isfile(path):
         raise FileNotFoundError(

@@ -1,11 +1,11 @@
 """四问统一时间推进引擎（MODELING_REPORT §6.2、§7.5、§11）。
 
-单一 run(cfg) 覆盖问题1/2/3/4 与效应隔离情景 S0–S4、灵敏度扰动：
+单一 run(cfg) 覆盖问题1/2/3/4 与兼容性诊断：
 - 每步严格保序算子分裂（①ρ,cp,k → ②解 T^{n+1} → ③用 T^{n+1} 算 D → ④解 C^{n+1}
   → ⑤C 下限 → ⑥Picard 复核），顺序不可交换（§11、§13.4 MC4）；
-- 分段步长（问题1 Δt=1s；问题2/3/4 Δt=2s→4s@14400s），跨输出时刻截断步长精确命中（§13.3）；
+- 正式调用显式传入步长：问题1为0.125s，问题2/3与问题4均为0.2500s；跨输出时刻截断步长精确命中；
 - 终止事件按逐点最大值首次 <C_th，式(19) 亚步线性插值定位 t_end（§6.4、K11）；
-- 移动边界经 ξ 网格 + 1/R² + 对流项（χ=0）统一处理，固定域退化为 Rdot=0（K18/U5）；
+- 移动边界经 ξ 网格统一处理；问题4正式配置χ=1，χ=0仅作Eulerian/Landau交叉验证；
 - 快照按输出网格记录，节点场插值到固定 r 列，问题4 对 r>R(t) 置空、末列取 ξ=1（§7.7、式(26)）。
 ⛔ 不使用 solve_ivp（§11）；界面调和平均（MC2）；下限 1e-3≪0.15（§6.2）。
 """
@@ -27,13 +27,14 @@ class CaseConfig:
     name: str
     appendix: int                 # 物性附录 2/3/4
     geom: object                  # FixedGeometry 或 MovingGeometry
-    chi: int = P.CHI_PRIMARY      # 骨架闭合开关（0 主用 / 1 仿射）
+    chi: int = P.CHI_PRIMARY      # 兼容默认；问题4显式传入χ=1，χ=0仅作交叉验证
     N: int = P.N_CV               # 控制体数
     dt_policy: str = "seg"        # 'p1'(=1s) | 'seg'(2s→4s) | 'const'
     dt_const: float = P.DT_SEG_FINE
     save_dt_s: float = P.P34_SAVE_DT_S   # 输出网格步长
     t_max_s: float = P.T_END_MAX_S       # 仿真硬上限
     detect_end: bool = True       # 是否检测达标事件
+    event_each_step: bool = False # 是否在每个内部步定位事件（默认保持原输出步检测）
     store_nodes: bool = False     # 是否保存全节点 ξ 场（问题4 表6 需要）
     dirichlet: bool = False       # SA6：h,h_m→大，退化 Dirichlet
     h_scale: float = 1.0          # SA2
@@ -143,9 +144,14 @@ def run(cfg: CaseConfig):
     save_idx = 1
     next_save = save_idx * cfg.save_dt_s
     t_end = None
+    end_T = None
+    end_C = None
+    end_R = None
     reached = False
     prev_maxC = float(np.max(C))
     prev_t = 0.0
+    event_prev_maxC = prev_maxC
+    event_prev_t = prev_t
 
     while t < cfg.t_max_s - 1e-9:
         dt = cfg.dt_at(t)
@@ -208,17 +214,34 @@ def run(cfg: CaseConfig):
         resid_step_max = max(resid_step_max, abs(stored_rate - flux + adv))
         mass_bal_abs += (float(np.sum(Vt * (C_it - C))) - flux * dt + adv * dt)
 
+        T_prev_step, C_prev_step = T, C
         T, C = T_it, C_it
         t = t_new
 
         # 步 6/7：达标事件（逐点最大值，式19 亚步插值）+ 快照
         maxC = float(np.max(C))
+        if (cfg.detect_end and cfg.event_each_step and not reached
+                and maxC <= P.C_TH < event_prev_maxC):
+            denom = event_prev_maxC - maxC
+            frac = (event_prev_maxC - P.C_TH) / denom if denom > 0 else 1.0
+            t_end = event_prev_t + (t - event_prev_t) * frac
+            end_T = T_prev_step + frac * (T - T_prev_step)
+            end_C = C_prev_step + frac * (C - C_prev_step)
+            end_R = float(cfg.geom.R(t_end))
+            reached = True
+        event_prev_maxC = maxC
+        event_prev_t = t
+
         if landed and abs(t - next_save) < 1e-6:
             record(t, T, C, Rn)
-            if cfg.detect_end and not reached and maxC < P.C_TH <= prev_maxC:
+            if (cfg.detect_end and not cfg.event_each_step and not reached
+                    and maxC < P.C_TH <= prev_maxC):
                 denom = prev_maxC - maxC
                 frac = (P.C_TH - maxC) / denom if denom > 0 else 0.0
                 t_end = t - cfg.save_dt_s * frac
+                end_T = None
+                end_C = None
+                end_R = float(cfg.geom.R(t_end))
                 reached = True
             prev_maxC = maxC
             prev_t = t
@@ -226,6 +249,8 @@ def run(cfg: CaseConfig):
             next_save = save_idx * cfg.save_dt_s
             if reached and cfg.detect_end:
                 break
+        elif reached and cfg.detect_end:
+            break
 
     # ---- 打包 ----
     out = {
@@ -248,6 +273,9 @@ def run(cfg: CaseConfig):
         "cols_m": cols_m,
         "t_end_s": t_end,
         "t_end_h": (t_end / P.SEC_PER_HOUR) if t_end is not None else None,
+        "end_T": end_T,
+        "end_C": end_C,
+        "end_R": end_R,
         "reached": reached,
         "resid_step_max": resid_step_max,
         "mass_resid_rel": abs(mass_bal_abs) / C0_tot if C0_tot else float("nan"),

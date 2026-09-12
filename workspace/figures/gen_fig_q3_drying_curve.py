@@ -38,7 +38,7 @@ ax.axvline(t_end, color=C['red_strong'], lw=0.9, ls='--')
 ax.plot([t_end], [C_TH], marker='o', ms=4.5, mfc='none', mew=1.2,
         color=C['red_strong'])
 
-ax.annotate('%.3f h' % t_end, xy=(t_end, C_TH), xytext=(t_end - 15.5, 0.42),
+ax.annotate('%.4f h' % t_end, xy=(t_end, C_TH), xytext=(t_end - 15.5, 0.42),
             color=C['red_strong'])
 ax.annotate('%.4f kg/kg' % float(d['Cbar'][-1]), xy=(t_h[-1], d['Cbar'][-1]),
             xytext=(28.0, 0.86), color=C['green_3'])

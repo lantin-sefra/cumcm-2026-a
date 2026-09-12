@@ -44,9 +44,9 @@ ax.contour(t_h, r_grid, Z, levels=[C_TH, 0.5, 1.0, 1.5, 2.0],
 
 lb, = ax.plot(t_h, R_cm, color=C['red_strong'], lw=1.8, label='移动边界 $R(t)$')
 ax.axvline(t_end, color=C['red_strong'], lw=0.9, ls='--')
-ax.annotate('%.3f h' % t_end, xy=(t_end, 0.20), xytext=(t_end - 15.0, 0.16),
+ax.annotate('%.4f h' % t_end, xy=(t_end, 0.20), xytext=(t_end - 15.0, 0.16),
             color=C['red_strong'])
-ax.annotate('%.3f cm' % R_cm[-1], xy=(t_h[-1], R_cm[-1]), xytext=(30.0, 1.34),
+ax.annotate('%.4f cm' % R_cm[-1], xy=(t_h[-1], R_cm[-1]), xytext=(30.0, 1.34),
             color=C['red_strong'])
 
 ax.set_xlabel('时间 $t$ (h)')

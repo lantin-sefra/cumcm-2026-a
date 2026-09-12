@@ -41,7 +41,7 @@ panel(ax1, '(a)')
 ax2.fill_between(Cbar, rate, 0.0, color=C['green_1'], alpha=0.35, lw=0)
 ax2.plot(Cbar, rate, color=C['green_3'], lw=1.5)
 ax2.axvline(float(Cbar[-1]), color=C['red_strong'], lw=0.9, ls=':')
-ax2.annotate('%.3f h' % t_end, xy=(float(Cbar[-1]), float(rate.max()) * 0.5),
+ax2.annotate('%.4f h' % t_end, xy=(float(Cbar[-1]), float(rate.max()) * 0.5),
              xytext=(0.22, float(rate.max()) * 0.66), color=C['red_strong'])
 ax2.set_xlabel('体平均含水率 $\\bar{C}$ (kg/kg)')
 ax2.set_ylabel('干燥速率 (kg/(kg·h))')

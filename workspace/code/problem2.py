@@ -55,7 +55,8 @@ def solve(res=None, write=True):
                              res["t"][mask])
 
     summary = {
-        "problem": 2, "appendix": 3, "N": res["N"], "dt_s": 1.0, "chi": "n.a.(fixed)",
+        "problem": 2, "appendix": 3, "N": res["N"],
+        "dt_s": P.DT_P23, "output_dt_s": P.P2_SAVE_DT_S, "chi": "n.a.(fixed)",
         "report_window_h": 3.0,
         "process_end_h": res["t_end_h"],
         "mass_resid_rel": res["mass_resid_rel"],

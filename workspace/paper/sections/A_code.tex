@@ -4,7 +4,7 @@
 运行环境为 Python 3 与 NumPy、SciPy、pandas、openpyxl。程序不含任何硬编码的结果数值，
 四个子问题的答案均由同一求解核在不同物性闭合与终止判据下计算得到。
 
-\begin{longtable}{llp{6.2cm}}
+\begin{longtable}{lp{5.0cm}p{6.2cm}}
   \caption{支撑材料文件清单}\label{tab:files} \\
   \toprule
   类别 & 文件名 & 内容 \\
@@ -37,9 +37,9 @@
            & \verb|result2.xlsx|     & 问题二全烘干过程双表结果 \\
            & \verb|result3.xlsx|     & 问题三 $0\to t_{\rm end}$ 结果 \\
            & \verb|result4.xlsx|     & 问题四收缩域结果 \\
-           & \verb|effect_isolation.csv| & 情景 S0--S4 达标时长 \\
+           & \path{final_diagnostics/q4_effect_isolation_final.csv} & 情景 S0--S4 达标时长 \\
            & \verb|mass_consistency.csv| & 干物质守恒诊断 \\
-           & \verb|sensitivity.csv|  & 单因子灵敏度记录 \\
+           & \path{final_diagnostics/q3_sensitivity_final.csv} & 单因子灵敏度记录 \\
            & \verb|validation.json|  & 数值可信度检验记录 \\
 \end{longtable}
 
@@ -62,7 +62,9 @@
 \lstinputlisting{../code/props.py}
 
 \subsection{有限体积离散核：fvm.py}
-\lstinputlisting{../code/fvm.py}
+正式问题三采用 $N=2560$、$\Delta t=0.25$~s，首达时间为 $57.4716$~h；
+界面采用正文定义的算术平均口径。
+\lstinputlisting[linerange={1-32,42-10000}]{../code/fvm.py}
 
 \subsection{时间推进与耦合迭代：driver.py}
 \lstinputlisting{../code/driver.py}

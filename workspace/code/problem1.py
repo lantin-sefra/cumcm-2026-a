@@ -1,6 +1,6 @@
 """问题1：附录2 常物性温度 + 非线性传质（MODELING_REPORT §5）。
 
-Δt=1 s 推进至 1800 s；表1/表2 报表 7×5；result1.xlsx 双表 1 s 步长 21 列。
+内部 Δt=0.125 s 推进至 1800 s；表1/表2 报表 7×5；result1.xlsx 双表按 1 s 输出 21 列。
 """
 from __future__ import annotations
 
@@ -29,7 +29,8 @@ def _report_block(res, times_s, field):
 
 def solve(write=True):
     g = geometry.FixedGeometry(P.R0_M)
-    cfg = D.CaseConfig(name="P1", appendix=2, geom=g, dt_policy="p1",
+    cfg = D.CaseConfig(name="P1", appendix=2, geom=g, N=P.N_P1_CV,
+                       dt_policy="p1",
                        save_dt_s=P.P1_SAVE_DT_S, t_max_s=P.P1_SAVE_DURATION_S,
                        detect_end=False)
     res = D.run(cfg)
@@ -63,7 +64,8 @@ def solve(write=True):
     # JSON 摘要（无大数组）
     j = int(np.argmin(np.abs(res["t"] - 1800.0)))
     summary = {
-        "problem": 1, "appendix": 2, "N": res["N"], "dt_s": 1.0, "chi": "n.a.(fixed)",
+        "problem": 1, "appendix": 2, "N": res["N"], "dt_s": P.DT_P1,
+        "output_dt_s": P.P1_SAVE_DT_S, "chi": "n.a.(fixed)",
         "center_T_1800": float(res["Tcenter"][j]),
         "center_C_1800": float(res["Ccenter"][j]),
         "surface_T_1800": float(res["Tsurf"][j]),

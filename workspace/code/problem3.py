@@ -62,7 +62,8 @@ def solve(res=None, write=True):
                              tt[keep])
 
     summary = {
-        "problem": 3, "appendix": 3, "N": res["N"], "dt_s": 1.0, "chi": "n.a.(fixed)",
+        "problem": 3, "appendix": 3, "N": res["N"],
+        "dt_s": P.DT_P23, "output_dt_s": P.P2_SAVE_DT_S, "chi": "n.a.(fixed)",
         "t_end_h": res["t_end_h"], "t_end_s": t_end_s,
         "maxC_at_end": float(res["maxC"][int(np.argmin(np.abs(res["t"] - t_end_s)))]),
         "mass_resid_rel": res["mass_resid_rel"],

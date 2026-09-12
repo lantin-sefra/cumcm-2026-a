@@ -1,8 +1,7 @@
-"""问题2/3 共享主推进（附录3 固定域 R=R0，Δt=1 s 全程至达标）。
+"""问题2/3 共享主推进（附录3固定域 R=R0，从 t=0 连续推进至达标）。
 
-⛔ 问题2/3 模型完全相同（§6.3/§6.4），仅报表窗口与终止判据不同：
-一次 1 s 主运行同时供 result2（全程 1 s）、result3（60 s 子采样）、表3/4/5 与 P3 的 t_end。
-result2 要求「每隔 1 s」故主步长取 1 s（严于分段 2s→4s，更精确，不做事后插值，§13.3）。
+问题2的3 h结果与问题3首达时间必须从同一次状态轨迹提取，禁止重新初始化或拼接。
+正式生产离散统一为 N=2560、内部 Δt=0.25 s；快照仍每 1 s 保存。
 """
 from __future__ import annotations
 
@@ -19,7 +18,8 @@ def run_master(force=False):
         return _MASTER["res"]
     g = geometry.FixedGeometry(P.R0_M)
     cfg = D.CaseConfig(name="P2P3_master", appendix=3, geom=g,
-                       dt_policy="const", dt_const=P.DT_P1,      # 1 s
+                       N=P.N_P23_CV,
+                       dt_policy="const", dt_const=P.DT_P23,
                        save_dt_s=P.P2_SAVE_DT_S,                 # 1 s 输出
                        t_max_s=P.T_END_MAX_S, detect_end=True,
                        store_nodes=False)

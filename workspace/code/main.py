@@ -1,6 +1,6 @@
 """交付编排入口（MODELING_REPORT §11 落盘清单）。
 
-顺序：问题1 → 问题2/3（共用附录3 master，1 s 全程只算一次）→ 问题4（S0–S4）
+顺序：问题1 → 问题2/3（共用附录3连续主解）→ 问题4（χ=1主模型及χ=0交叉验证）
      → §9 验证与灵敏度（复用已算 P1/P3/P4 结果）→ figures/*.json 汇总。
 ⛔ 不绘图（图表阶段负责）；所有数值真算，不硬编码。
 运行：python _utils/run_compute.py code/main.py
@@ -51,7 +51,7 @@ def main():
     print(f"[P1] center_C@1800={s1['center_C_1800']:.4f} "
           f"mass_resid={s1['mass_resid_rel']:.2e}")
 
-    # ---- 问题2/3（附录3 master：1 s 全程只算一次）----
+    # ---- 问题2/3（同一次从 t=0 至首达的连续积分）----
     r_master = master_p23.run_master()
     r2, s2 = problem2.solve(res=r_master, write=True)
     r3, s3 = problem3.solve(res=r_master, write=True)
@@ -59,10 +59,10 @@ def main():
     print(f"[P3] t_end={s3['t_end_h']:.3f}h maxC@end={s3['maxC_at_end']:.4f} "
           f"mass_resid={s3['mass_resid_rel']:.2e}")
 
-    # ---- 问题4（附录4 + R(t)；S0–S4 效应隔离）----
+    # ---- 问题4（附录4 + R(t)；χ=1主模型，χ=0仅交叉验证）----
     r4, s4 = problem4.solve(write=True)
     ei = s4["effect_isolation"]
-    print(f"[P4] t_end(S2,χ=0)={s4['t_end_h']:.3f}h  net={ei['net_h']:+.3f}h "
+    print(f"[P4] t_end(S2,χ=1)={s4['t_end_h']:.3f}h  net={ei['net_h']:+.3f}h "
           f"(换物性{ei['prop_swap_h']:+.3f} 加收缩{ei['shrink_h']:+.3f}) "
           f"χ闭合差={s4['chi_closure']['diff_rel']*100:+.2f}%")
 
@@ -84,19 +84,23 @@ def main():
                 {"problem": 4, "summary": s4})
 
     bounds_probes = [
-        {"quantity": "t_end_hours_P4_chi0_primary", "claim": "upper",
+        {"quantity": "t_end_hours_P4_chi1_primary", "claim": "upper",
          "probe_delta_sign": 0,
-         "note": "§7.4 冻结半径使 t_end 偏上界方向；但 S2 达标 52.19h < 附件2 数据 72h，"
+         "note": "§7.4 冻结半径使 t_end 偏上界方向；但 S2 在附件2数据范围内已达标，"
                  "冻结未触发(radius_frozen=False)，交付 t_end 不受冻结抬升，故探针符号=0(不绑定)"}
     ]
     all_results = {
         "problem": "2026-CUMCM-A-herb-drying",
-        "delivery_grid": {"N": P.N_CV, "dt_P1_s": 1.0, "dt_P234": "seg(2->4)s"},
+        "delivery_grid": {
+            "P1": {"N": P.N_P1_CV, "dt_s": P.DT_P1},
+            "P2_P3": {"N": P.N_P23_CV, "dt_s": P.DT_P23,
+                      "output_dt_s": P.P2_SAVE_DT_S},
+            "P4": {"N": P.N_P4_CV, "dt_s": P.DT_P4}},
         "headline": {
             "P1_center_C_1800s": s1["center_C_1800"],
             "P3_t_end_h": s3["t_end_h"],
-            "P4_t_end_h_chi0_primary": s4["t_end_h"],
-            "P4_t_end_h_chi1_alt": s4["chi_closure"]["S3_chi1_h"],
+            "P4_t_end_h_chi1_primary": s4["t_end_h"],
+            "P4_t_end_h_chi0_crosscheck": s4["chi_closure"]["S3_chi0_crosscheck_h"],
             "P4_chi_closure_uncertainty_rel": s4["chi_closure"]["diff_rel"],
             "effect_isolation_h": {
                 "property_swap": ei["prop_swap_h"], "shrinkage": ei["shrink_h"],

@@ -46,7 +46,7 @@ axes[0].set_ylabel('干基含水率 $C$ (kg/kg)')
 for ax in axes[1:]:
     ax.set_yticklabels([])
 
-axes[2].annotate('%.3f cm' % R_cm[-1], xy=(R_cm[-1], 0.35),
+axes[2].annotate('%.4f cm' % R_cm[-1], xy=(R_cm[-1], 0.35),
                  xytext=(0.14, 0.52), color=C['red_strong'])
 shared_legend(fig, axes=[axes[0]], where='top', ncol=6)
 
