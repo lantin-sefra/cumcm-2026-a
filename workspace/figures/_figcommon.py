@@ -152,21 +152,51 @@ def _moving_result():
         't': t,
         'R_m': R_cm * 1e-2,
         'nodesC': nodesC,
+        'maxC': np.nanmax(nodesC, axis=1),
         'N': N,
         't_end_h': float(t[-1] / SEC_PER_HOUR),
     }
 
 
+def sha256_file(path):
+    """计算数据文件 SHA-256，供出图脚本打印对账。"""
+    import hashlib
+    digest = hashlib.sha256()
+    with open(path, 'rb') as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def describe_source(path, **meta):
+    """打印正式数据源路径、SHA-256 与关键口径。"""
+    digest = sha256_file(path)
+    print('[source] %s' % os.path.relpath(path, ROOT), flush=True)
+    print('[source] sha256=%s' % digest, flush=True)
+    if meta:
+        print('[source] %s' % '  '.join('%s=%s' % item for item in meta.items()),
+              flush=True)
+    return digest
+
+
 def load(tag):
     """正式结果图读取最终 Excel；其他历史诊断图仍按原缓存读取。"""
     if tag in ('p1', 'p2', 'p3'):
+        number = {'p1': 1, 'p2': 2, 'p3': 3}[tag]
+        describe_source(os.path.join(ROOT, 'output', 'result%d.xlsx' % number),
+                        tag=tag)
         return _fixed_result(tag)
     if tag == 'p4s2':
+        describe_source(os.path.join(ROOT, 'output', 'result4.xlsx'),
+                        tag='p4s2', chi=1)
         return _moving_result()
     path = os.path.join(FIGDATA, '%s.npz' % tag)
     if not os.path.isfile(path):
         raise FileNotFoundError(
-            '缺少数值场缓存 %s —— 请先运行 python figures/prep_figdata.py' % path)
+            '缺少数值场缓存 %s。正式出图应改读 result*.xlsx 或 '
+            'output/final_diagnostics/，不要重跑 prep_figdata.py。' % path)
+    print('[figdata-legacy] tag=%s 仍读 %s（非正式结果）' % (tag, path),
+          flush=True)
     return np.load(path)
 
 
@@ -187,6 +217,19 @@ def load_csv(name):
     if not os.path.isfile(path):
         raise FileNotFoundError('缺少上游结果 %s' % path)
     return pd.read_csv(path)
+
+
+def load_formal_csv(name):
+    """只读 output/final_diagnostics/ 下的正式诊断，拒绝 legacy。"""
+    normalized = name.replace('\\', '/').lstrip('./')
+    if normalized.startswith('legacy/') or '/legacy/' in normalized:
+        raise RuntimeError('正式出图禁止读取 legacy: %s' % name)
+    if not normalized.startswith('final_diagnostics/'):
+        raise RuntimeError(
+            '正式出图 CSV 必须位于 final_diagnostics/: %s' % name)
+    frame = load_csv(normalized)
+    describe_source(os.path.join(ROOT, 'output', normalized))
+    return frame
 
 
 def newfig(w, h, width_fraction=0.92):

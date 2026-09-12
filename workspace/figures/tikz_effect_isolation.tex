@@ -38,16 +38,16 @@
 
   % ================= 两因素二乘二格局 =================
   \node[scenario, text width=3.6cm, minimum width=4.2cm] at (0,3.6)
-       {\textbf{S0}\ 问题 3 基线\\[2pt] 附录 3 物性\\ 固定域 $R$ 为常数};
+       {\textbf{S0}\ 共同网格诊断基准\\[2pt] 附录 3 物性\\ 固定域 $R$ 为常数};
 
   \node[control, text width=3.6cm, minimum width=4.2cm] at (6.8,3.6)
        {\textbf{S1}\ 单换物性\\[2pt] 附录 4 物性\\ 仍取固定域\\[2pt] 对照，不交付};
 
   \node[scenario, text width=3.6cm, minimum width=4.2cm] at (6.8,-0.6)
-       {\textbf{S2}\ 问题 4 主用\\[2pt] 附录 4 物性\\ 收缩域含对流项};
+       {\textbf{S2}\ 问题 4 主用\\[2pt] 附录 4 物性\\ $\chi=1$ 材料随动 ALE};
 
   \node[scenario, text width=3.6cm, minimum width=4.2cm] at (0,-0.6)
-       {\textbf{S3}\ 替代闭合\\[2pt] 附录 4 物性\\ 收缩域仿射骨架};
+       {\textbf{S3}\ 交叉验证\\[2pt] 附录 4 物性\\ $\chi=0$ Eulerian/Landau};
 
   % 单因素改变：每步只动一件事
   \draw[effect] (2.15,3.6) -- (4.60,3.6);
@@ -66,7 +66,8 @@
 
   \draw[refline] (11.2,-2.05) -- (11.2,-1.15);
   \node[align=left, text width=4.0cm, minimum width=4.4cm] at (11.4,-0.6)
-       {下界参照：主用情景\\ 应落在 S4 与 S1 之间};
+       {下界参照：主用情景\\ 应落在 S4 与 S1 之间\\[2pt]
+        $S_4<S_2<S_3<S_0<S_1$};
 
   % ================= 分解恒等式与归因警示 =================
   % 不用 \underbrace：花括号会被判为与恒等式主行重叠的独立文字行，
