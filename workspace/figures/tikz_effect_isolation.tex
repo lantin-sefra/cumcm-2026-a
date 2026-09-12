@@ -12,8 +12,10 @@
 % 本机 MiKTeX 的 expl3 为 2024-01-04，低于 ctex/xeCJK 的下限；fontspec 可用，
 % 故直接绑定宋体，中文换行全部用显式 \\ 控制（不依赖 CJK 自动断行）。
 \usepackage{fontspec}
-\setmainfont{SimSun}
+\usepackage{iftex}
+\IfFontExistsTF{SimSun}{\setmainfont{SimSun}}{\setmainfont{WenQuanYi Micro Hei}}
 \usepackage{amsmath}
+\usepackage{adjustbox}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc}
 
