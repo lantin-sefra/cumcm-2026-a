@@ -25,9 +25,9 @@ for h, i in zip(hours, idx):
     else:
         prof.append(d['Ccol'][i])
 
-# 基线间距 1.1：0 h 平带（高 2.55）只压住 6–12 h，且不再出现 0.34×3≈1 的假对齐。
-step = 1.1
-fig = newfig(6.4, 5.2, width_fraction=0.9)
+# 基线间距取 2.60，略大于 C0=2.55，0 h 平带不再盖住 6 h。
+step = 2.60
+fig = newfig(6.4, 6.6, width_fraction=0.90)
 ax = fig.add_subplot(1, 1, 1)
 
 for j in range(len(hours) - 1, -1, -1):
@@ -42,7 +42,7 @@ ax.set_yticklabels(['%.1f' % h for h in hours])
 ax.set_ylabel('时间 $t$ (h) — 各脊线基线')
 ax.set_xlabel('径向位置 $r$ (cm)')
 ax.set_xlim(0.0, 2.42)
-ax.set_ylim(-0.18, (len(hours) - 1) * step + 2.20)
+ax.set_ylim(-0.25, (len(hours) - 1) * step + 1.55)
 ax.set_xticks(np.arange(0.0, 2.1, 0.5))
 ax.yaxis.set_tick_params(which='minor', left=False)
 
@@ -63,8 +63,8 @@ ax.text(x_bar + 0.02, C0 + 0.18, '$C$ (kg/kg)', ha='left', va='bottom',
 i_last = len(hours) - 1
 ax.plot([0.0], [i_last * step + prof[i_last][0]], marker='o', ms=4.0,
         mfc='none', mew=1.1, color=C['red_strong'])
-ax.annotate('%.3f h / %.4f kg/kg' % (t_end, prof[i_last][0]),
-            xy=(0.0, i_last * step + prof[i_last][0]),
-            xytext=(0.08, i_last * step + 0.85), color=C['red_strong'])
+ax.text(0.08, i_last * step + 0.70,
+        '%.3f h / %.4f kg/kg' % (t_end, prof[i_last][0]),
+        color=C['red_strong'], va='bottom', ha='left')
 
 finish(fig, 'fig_q3_ridgeline')
