@@ -1,5 +1,7 @@
 # 计算结果说明书（comp-code）— 2026 CUMCM A 题「药材的烘干问题」
 
+> **historical diagnostic / 非正式结果。** 本文是早期粗网格流水线记录。正式论文、正式 Excel 与最终诊断见仓库根目录 `README.md`；不要用本文数字或 `output/legacy/` 替代 `paper/main.pdf` 与 `output/final_diagnostics/`。
+
 本文件汇总四个子问题的**建模方法要点**与**真实计算结果**。所有数值由 `code/main.py`
 经 `_utils/run_compute.py` 编排真算落盘（无硬编码、无事后手改），交付网格 N=40 控制体，
 温度/浓度双场全隐式后向 Euler 时间推进 + 保序算子分裂 + Picard 耦合迭代。

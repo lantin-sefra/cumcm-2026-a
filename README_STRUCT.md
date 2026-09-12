@@ -70,7 +70,7 @@ user_data/
 
 ## 代码 `workspace/code/`
 
-入口 `main.py`：P1 → P2/P3 共用 master → P4 → §9 验证。无 `requirements.txt`。常量只放 `params.py`。
+入口 `main.py`：P1 → P2/P3 共用 master → P4。旧 `validate.py` 不再自动执行。无 `requirements.txt`。常量只放 `params.py`。文件角色以仓库根目录 `README.md` 为准。
 
 | 文件 | 职责 |
 |---|---|
@@ -83,7 +83,7 @@ user_data/
 | `ambient.py` | 附件 1 环境时程插值 |
 | `problem1.py` … `problem4.py` | 四问求解与落盘 |
 | `master_p23.py` | 问题 2/3 共用全程计算 |
-| `validate.py` | 网格 / 时间步 / Bessel 对照 / 质量守恒 |
+| `validate.py` | **LEGACY DIAGNOSTIC**（粗网格 / 旧 χ），非正式结果 |
 | `io_out.py` | xlsx / csv 写出 |
 | `data_check.py` / `template_check.py` | 附件与模板核对 |
 
@@ -118,11 +118,10 @@ paper/
 
 | 文件 | 内容 |
 |---|---|
-| `result1.xlsx` … `result4.xlsx` | 四问完整网格（result2 约 20 万行） |
-| `table1_2_problem1.csv` … `table6_problem4.csv` | 论文摘要表 |
-| `validation.json` | §9 可信度，`all_pass=true` |
-| `sensitivity.csv` | 灵敏度 SA1–SA10 |
-| `effect_isolation.csv` | 问题 4 效应隔离 |
+| `result1.xlsx` … `result4.xlsx` | **正式结果**。result2 为前 3 h（1～10800 s） |
+| `final_diagnostics/` | **正式最终诊断** |
+| `legacy/` | 历史粗网格 / 旧 χ 诊断，仅追溯 |
+| `table1_2_problem1.csv` … `table6_problem4.csv` | 早期摘要表，可能落后于 result*.xlsx |
 | `mass_consistency.csv` | 收缩域干物质守恒诊断 |
 
 ---
@@ -154,10 +153,11 @@ paper/
 
 ---
 
-## 关键数值（已写入论文摘要）
+## 关键数值（与正式论文口径一致）
 
-- 问题 1（1800 s）：中心 33.577 ℃ / 2.5500 kg/kg；表面 36.786 ℃ / 1.511 kg/kg
-- 问题 2（3 h）：中心含水率 1.766 kg/kg（热先于质）
-- 问题 3：烘干时长 56.706 h
-- 问题 4：收缩后时长 52.190 h，末态半径 1.20 cm
-- 质量收支残差 ≤ 1.6×10⁻¹⁴；能力验收非 delivery 项均为 PASS
+- 问题 1（N=160，dt=0.125 s，1800 s）：中心 33.5755 ℃；表面 36.7856 ℃
+- 问题 2（N=2560，dt=0.25 s，3 h）：49.8495 ℃，49.9664 ℃，1.7662，1.0081
+- 问题 3（N=2560，dt=0.25 s）：57.4716 h
+- 问题 4（N=1280，dt=0.25 s，χ=1 正式 ALE）：51.0869 h，R=1.2000 cm
+- 问题 4（χ=0 交叉验证）：52.6476 h；差 1.5607 h（3.0550%）
+- 4 h 后环境长期平台：50.0000 ℃，0.0500 kg/kg

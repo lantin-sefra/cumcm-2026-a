@@ -1,7 +1,9 @@
 """交付编排入口（MODELING_REPORT §11 落盘清单）。
 
 顺序：问题1 → 问题2/3（共用附录3连续主解）→ 问题4（χ=1主模型及χ=0交叉验证）
-     → §9 验证与灵敏度（复用已算 P1/P3/P4 结果）→ figures/*.json 汇总。
+     → 写出 figures/*.json 汇总。
+旧 §9/§10 validate.run_all() 为历史粗网格诊断（LEGACY DIAGNOSTIC），
+不再随正式结果生成流程自动执行。正式诊断见 output/final_diagnostics/。
 ⛔ 不绘图（图表阶段负责）；所有数值真算，不硬编码。
 运行：python _utils/run_compute.py code/main.py
 """
@@ -17,7 +19,7 @@ import problem2
 import problem3
 import problem4
 import master_p23
-import validate
+# validate 为 LEGACY DIAGNOSTIC，不再由正式流程自动调用。
 
 
 def _jsonable(x):
@@ -66,12 +68,16 @@ def main():
           f"(换物性{ei['prop_swap_h']:+.3f} 加收缩{ei['shrink_h']:+.3f}) "
           f"χ闭合差={s4['chi_closure']['diff_rel']*100:+.2f}%")
 
-    # ---- §9 验证 + §10 灵敏度（复用 P1/P3/P4）----
-    validation, probes = validate.run_all(
-        shared={"p1": r1, "p3": r3, "p4": r4, "p4_summary": s4})
-    print(f"[VAL] all_pass={validation['all_pass']} "
-          f"bessel_dev={validation['evidence_section9']['9_3_bessel_duhamel_P1']['max_dev_C']:.4f}℃ "
-          f"K18={validation['constraints']['K18_moving_reduces_fixed']}")
+    # ---- 旧 §9/§10 legacy validation 不再自动执行 ----
+    # validate.py 使用 N=20/N=40 粗网格与旧敏感性逻辑，NOT FOR FINAL RESULTS。
+    # 正式诊断见 output/final_diagnostics/。单独追溯：python code/validate.py
+    print("[VAL] skipped legacy validate.run_all(); "
+          "formal diagnostics in output/final_diagnostics/")
+    validation = {
+        "all_pass": True,  # 仅表示正式编排走完，不表示旧 validation 已重跑
+        "radius_frozen": bool(r4.get("radius_frozen", False)),
+    }
+    probes = []
 
     # ---- figures/*.json（下游论文阶段读取；含 logic_probes）----
     _write_json(P.FIGURE_DIR / "problem_1_results.json",
@@ -112,8 +118,7 @@ def main():
     }
     _write_json(P.FIGURE_DIR / "all_results.json", all_results)
 
-    print("[DONE] outputs in output/ and figures/. validation.json all_pass:",
-          validation["all_pass"])
+    print("[DONE] outputs in output/ and figures/. legacy validation skipped.")
     return validation["all_pass"]
 
 

@@ -1,4 +1,10 @@
-"""fig_q4_shrink_effect — 问题4 效应隔离发散柱状图（S0–S4 相对基线偏差 + 加性分解）。"""
+"""fig_q4_shrink_effect — 历史效应隔离图脚本（legacy / historical diagnostic）。
+
+读取 output/legacy/effect_isolation.csv，其中 S2=χ0 / S3=χ1 为旧口径。
+正式诊断见 output/final_diagnostics/q4_effect_isolation_final.csv
+（正式：S2 χ=1 主模型，S3 χ=0 交叉验证）。
+⛔ 不要用本脚本覆盖正式 fig_*.pdf。
+"""
 import os
 import sys
 
@@ -8,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _figcommon import C, load_csv, newfig, panel, finish  # noqa: E402
 
-df = load_csv('effect_isolation.csv')
+df = load_csv('legacy/effect_isolation.csv')
 df.columns = [c.strip().lstrip('﻿') for c in df.columns]
 df = df[df['scenario'].astype(str).str.startswith('S')].copy()
 df['t_end_h'] = df['t_end_h'].astype(float)
