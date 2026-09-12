@@ -129,10 +129,11 @@ paper/
 ## 图表 `workspace/figures/`
 
 - `gen_fig_*.py` → `fig_*.pdf`（时空场、干燥曲线、灵敏度、收缩等）
+- 效应隔离 / χ 闭合 / 灵敏度 / 物性平行坐标已改读 `result*.xlsx` 或 `final_diagnostics/`，不要再读 `legacy/` 或旧 `_figdata` npz
 - TikZ：`tikz_cylinder_cv` / `tikz_fv_stencil` / `tikz_landau_map` / `tikz_effect_isolation`
 - HTML 结构图：`fig_pipeline` / `fig_roadmap` / `fig_coupling_structure`
-- 摘要：`problem_{1–4}_results.json`、`all_results.json`
-- 预计算：`_figdata/*.npz`
+- 摘要：`problem_{1–4}_results.json`、`all_results.json`（历史缓存，非正式结果）
+- 预计算：`_figdata/*.npz`（历史缓存；`prep_figdata.py` 为 LEGACY，不要重跑）
 
 公共样式在 `_figcommon.py`，插图 TeX 片段在 `latex_includes.tex`。
 

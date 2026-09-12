@@ -1,14 +1,17 @@
-"""为 22 张数据图准备真实数值场（复用 code/ 的交付求解器，不新造模型、不硬编码）。
+"""LEGACY / 历史缓存准备脚本。正式出图不要运行本文件。
 
-产出 figures/_figdata/*.npz：
+本脚本仍按底层默认 CHI_PRIMARY=0 写 p4s2.npz，会把旧 χ 关系写进 _figdata。
+正式图应直接读 output/result*.xlsx 与 output/final_diagnostics/。
+
+产出 figures/_figdata/*.npz（历史缓存，不是正式结果）：
   p1.npz        问题1（附录2，1800 s，10 s 快照）温度/浓度全场 + 半解析 Duhamel 参照
   p2.npz        问题2（附录3，0-3 h，30 s 快照）温度/浓度全场
   p3.npz        问题3（附录3，全程至 t_end，60 s 快照）温度/浓度 + maxC + 体平均
-  p4s2.npz      问题4 主用 S2（附录4 + R(t)，χ=0）节点场 + R(t)
-  p4s3.npz      问题4 对照 S3（χ=1）maxC 时程
+  p4s2.npz      问题4 旧口径 S2（附录4 + R(t)，χ=0）节点场 + R(t)
+  p4s3.npz      问题4 旧口径 S3（χ=1）maxC 时程
   conv.npz      网格/时间步收敛扫描（附录2，1800 s 终态场对参照解偏差）
   inputs.npz    附件1 环境时序（241 行）、附件2 半径时序（145 行，含单调化）
-⛔ 本脚本不属于出图脚本（文件名不以 gen_fig 开头），只做一次性数值准备。
+⛔ 不要重跑本脚本覆盖正式 fig_*.pdf，也不要重跑 Q1–Q4。
 """
 from __future__ import annotations
 
@@ -209,6 +212,10 @@ def run_inputs():
 
 
 if __name__ == '__main__':
+    if os.environ.get('FORCE_LEGACY_PREP') != '1':
+        raise SystemExit(
+            'prep_figdata.py 是 LEGACY 缓存脚本，会按旧 χ 关系重写 _figdata。'
+            '正式出图不要运行。若确需历史复现，设置 FORCE_LEGACY_PREP=1。')
     t0 = time.time()
     run_inputs()
     run_p1()

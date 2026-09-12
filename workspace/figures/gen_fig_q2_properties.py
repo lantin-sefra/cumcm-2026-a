@@ -1,7 +1,8 @@
 """fig_q2_properties — 附录3 四条物性公式的平行坐标图（按含水率着色）。
 
-四轴 ρ / c_p / k / D 各自独立量纲，逐轴按自身量程归一到 [0,1] 后连线；
-折线颜色编码该样本的干基含水率 C，温度取问题2 实际场中该 C 对应的平均温度。
+C 取正式 result3.xlsx 的 21 列场；T 在前 3 h 取正式 result2.xlsx，
+3 h 之后按题目平台温度 50 ℃。ρ/cp/k/D 用 code/props.py 附录3 公式重算，
+不读 _figdata/p3.npz 的旧节点物性。
 """
 import os
 import sys
@@ -10,18 +11,35 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from _figcommon import C, load, newfig, finish, mono_cmap  # noqa: E402
+from _figcommon import C, load, newfig, finish, mono_cmap, ROOT  # noqa: E402
 
-d = load('p2')
+CODE = os.path.join(ROOT, 'code')
+if CODE not in sys.path:
+    sys.path.insert(0, CODE)
+import props as PR  # noqa: E402
+
+p2 = load('p2')
 p3 = load('p3')
 
-# 取问题3 全程节点场（覆盖 C 从 2.55 到 0.15 的完整区间），按 C 分箱取代表样本
-Cs = p3['nodesC'].ravel()
-Ts = p3['nodesT'].ravel()
-rho = p3['rho'].ravel()
-cp = p3['cp'].ravel()
-kk = p3['k'].ravel()
-Dd = p3['D'].ravel()
+Ccol = np.asarray(p3['Ccol'], dtype=float)
+t3 = np.asarray(p3['t'], dtype=float)
+Tcol = np.full_like(Ccol, 50.0)
+t2 = np.asarray(p2['t'], dtype=float)
+T2 = np.asarray(p2['Tcol'], dtype=float)
+early = t3 <= t2[-1] + 1e-9
+for j in range(Ccol.shape[1]):
+    Tcol[early, j] = np.interp(t3[early], t2, T2[:, j])
+
+rho, cp, kk, Dd = PR.props(3, Ccol, Tcol)
+Cs = Ccol.ravel()
+Ts = Tcol.ravel()
+rho = rho.ravel()
+cp = cp.ravel()
+kk = kk.ravel()
+Dd = Dd.ravel()
+print('[source] appendix=3  C=[%.4f, %.4f]  T=[%.4f, %.4f]  n=%d'
+      % (float(Cs.min()), float(Cs.max()), float(Ts.min()), float(Ts.max()),
+         Cs.size), flush=True)
 
 nb = 24
 edges = np.linspace(Cs.min(), Cs.max(), nb + 1)
@@ -36,6 +54,11 @@ for b in range(nb):
     cvals.append(Cs[m].mean())
 rows = np.asarray(rows)
 cvals = np.asarray(cvals)
+print('[source] bins=%d  C_high=%.4f→C_low=%.4f  rho=%.1f→%.1f  '
+      'cp=%.0f→%.0f  k=%.3f→%.3f  Dmin=%.3e'
+      % (len(cvals), cvals[-1], cvals[0], rows[-1, 0], rows[0, 0],
+         rows[-1, 1], rows[0, 1], rows[-1, 2], rows[0, 2], rows[:, 3].min()),
+      flush=True)
 
 # 轴名拆两行（符号 / 单位）：量程写进同一个刻度标签时，"1.77e+03–3.41e+03"
 # 这类长串宽 91 pt，而相邻轴心只隔 69 pt，实测 k 与 D 两条轴的标签直接重叠
