@@ -107,10 +107,6 @@ for x, l, h in zip(xs, lo, hi):
 
 ax.set_xticks(xs)
 ax.set_xticklabels(names)
-# 轴名字符串与 main 一致，仍写 (℃)。main 用 Microsoft YaHei 画出 U+2103；
-# 本环境优先中文字体把该字画成空白，刻度改用带实心 ℃ 字形的西文字体。
-for lab in ax.get_xticklabels():
-    lab.set_fontfamily('DejaVu Sans')
 ax.set_xlim(-0.45, len(names) - 0.55)
 # 上下各让出一行：端点量程读数贴在归一化轴的 0 / 1 之外
 ax.set_ylim(-0.26, 1.24)
