@@ -60,6 +60,7 @@
 
 ## 7. 提醒
 
-- 正式图在 `workspace/figures/fig_*.pdf`，不要用旧脚本覆盖。
+- 正式图在 `workspace/figures/fig_*.pdf`。下列脚本已接到 `result*.xlsx` / `final_diagnostics/`，可以重跑：`gen_fig_q4_shrink_effect.py`、`gen_fig_chi_closure.py`、`gen_fig_q3_sensitivity.py`、`gen_fig_q2_properties.py`。
+- 不要重跑 `figures/prep_figdata.py`，不要重跑 Q1–Q4。
 - `code/validate.py` 是 LEGACY DIAGNOSTIC，不会随正式 `main.py` 自动执行。
 - 项目结构细节见 [README_STRUCT.md](README_STRUCT.md)。
