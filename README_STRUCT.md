@@ -18,8 +18,8 @@ python code/main.py
 ## 顶层
 
 ```
-MHAgent_A题_全部_20260911_184446/
-├── cursor.md              # 本文件：项目结构
+├── workspace/             # 项目工作区
+├── README_STRUCT.md       # 本文件：项目结构
 ├── README.md              # 导出说明与运行方式
 ├── manifest.json          # 导出清单
 └── workspace/             # 全部工作产物
