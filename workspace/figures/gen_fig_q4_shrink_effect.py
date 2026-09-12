@@ -91,13 +91,17 @@ ax2.set_xticks(xb)
 ax2.set_xticklabels(['物性', '收缩', '净差'])
 ax2.set_ylabel('$t_{end}$ 变化量 (h)｜S1−S0 / S2−S1 / S2−S0')
 ax2.set_xlim(-0.62, 2.62)
-ax2.set_ylim(-90.0, 90.0)
+ax2.set_ylim(-98.0, 92.0)
 ax2.set_yticks(np.arange(-80, 81, 20))
 for j, (lab, val, col) in enumerate(steps):
-    mid = 0.5 * val
-    ax2.annotate('%+.4f h' % val, xy=(xb[j], val),
-                 xytext=(xb[j], mid if abs(mid) > 8.0 else (8.0 if val >= 0 else -8.0)),
-                 ha='center', va='center', color=col)
+    # 长柱：读数贴在柱尖外侧。短净差柱：改挂到零轴另一侧，避免字高吃进柱体。
+    if abs(val) < 15.0:
+        ytxt, va = (10.0, 'bottom') if val < 0 else (-10.0, 'top')
+    elif val >= 0:
+        ytxt, va = val + 5.0, 'bottom'
+    else:
+        ytxt, va = val - 5.0, 'top'
+    ax2.text(xb[j], ytxt, '%+.4f h' % val, ha='center', va=va, color=col)
 panel(ax2, '(b)')
 
 finish(fig, 'fig_q4_shrink_effect')
