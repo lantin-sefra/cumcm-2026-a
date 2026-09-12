@@ -7,7 +7,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _figcommon import (C, load, newfig, finish, seq_colors,  # noqa: E402
-                        nearest_idx, SEC_PER_HOUR)
+                        nearest_idx, SEC_PER_HOUR, C0)
 
 d = load('p3')
 t = d['t']
@@ -17,10 +17,17 @@ hours = list(np.arange(0.0, np.floor(t_end / 6.0) * 6.0 + 0.1, 6.0)) + [t_end]
 idx = [nearest_idx(t, h * SEC_PER_HOUR) for h in hours]
 cols = seq_colors(len(hours), 'blue')
 
-# 山脊图基线间距：按最大剖面幅度定，保证相邻脊线不互穿
-prof = [d['Ccol'][i] for i in idx]
-step = 0.34
-fig = newfig(6.4, 4.4, width_fraction=0.9)
+# result3.xlsx 第一行是 t=60s。0.0 h 必须用精确均匀初值，不能把 60s 薄边界层标成 t=0。
+prof = []
+for h, i in zip(hours, idx):
+    if abs(float(h)) < 1e-12:
+        prof.append(np.full(r.shape, C0))
+    else:
+        prof.append(d['Ccol'][i])
+
+# 基线间距 1.1：0 h 平带（高 2.55）只压住 6–12 h，且不再出现 0.34×3≈1 的假对齐。
+step = 1.1
+fig = newfig(6.4, 5.2, width_fraction=0.9)
 ax = fig.add_subplot(1, 1, 1)
 
 for j in range(len(hours) - 1, -1, -1):
@@ -34,22 +41,23 @@ ax.set_yticks([j * step for j in range(len(hours))])
 ax.set_yticklabels(['%.1f' % h for h in hours])
 ax.set_ylabel('时间 $t$ (h) — 各脊线基线')
 ax.set_xlabel('径向位置 $r$ (cm)')
-ax.set_xlim(0, 2.0)
-ax.set_xticks(np.arange(0, 2.1, 0.25))
-ax.set_ylim(-0.12, (len(hours) - 1) * step + 2.85)
-# y 轴刻度是脊线基线（时刻序），次刻度无意义；样式默认开次刻度后自动定位器按
-# 0.34 的主刻度间距细分出 65 个次刻度，间距只有 5.4 pt、长 1.5 pt，在脊线上连成
-# 一条实心黑带，认不出刻度位置。
+ax.set_xlim(0.0, 2.42)
+ax.set_ylim(-0.18, (len(hours) - 1) * step + 2.20)
+ax.set_xticks(np.arange(0.0, 2.1, 0.5))
 ax.yaxis.set_tick_params(which='minor', left=False)
 
-# 右侧副轴给出脊线自身的含水率标尺（每格 0.34 kg/kg 对应一个基线间距）
-ax2 = ax.twinx()
-ax2.set_ylim(ax.get_ylim())
-ax2.set_yticks([0.0, 1.0, 2.0, 2.55])
-ax2.set_yticklabels(['0', '1', '2', '2.55'])
-ax2.set_ylabel('自基线起算的 $C$ (kg/kg)')
-# 副轴同理：4 个不等距主刻度细分出 30 个次刻度，右脊线上半段成一排密点梳齿
-ax2.yaxis.set_tick_params(which='minor', right=False)
+# 幅值短尺挂在 0 h 基线右侧：只表示高度对应的 C，不与左轴时刻对齐。
+x_bar = 2.10
+c_ticks = (0.0, 1.0, 2.0, C0)
+ax.plot([x_bar, x_bar], [0.0, C0], color=C['neutral_black'], lw=0.9,
+        clip_on=False)
+for cv, lab in zip(c_ticks, ('0', '1', '2', '2.55')):
+    ax.plot([x_bar, x_bar + 0.04], [cv, cv], color=C['neutral_black'],
+            lw=0.8, clip_on=False)
+    ax.text(x_bar + 0.06, cv, lab, va='center', ha='left',
+            color=C['neutral_black'])
+ax.text(x_bar + 0.02, C0 + 0.18, '$C$ (kg/kg)', ha='left', va='bottom',
+        color=C['neutral_black'])
 
 # 末条脊线（t_end）峰值即达标判据值，标出其数值供读数
 i_last = len(hours) - 1
@@ -57,6 +65,6 @@ ax.plot([0.0], [i_last * step + prof[i_last][0]], marker='o', ms=4.0,
         mfc='none', mew=1.1, color=C['red_strong'])
 ax.annotate('%.3f h / %.4f kg/kg' % (t_end, prof[i_last][0]),
             xy=(0.0, i_last * step + prof[i_last][0]),
-            xytext=(0.08, i_last * step + 1.60), color=C['red_strong'])
+            xytext=(0.08, i_last * step + 0.85), color=C['red_strong'])
 
 finish(fig, 'fig_q3_ridgeline')
