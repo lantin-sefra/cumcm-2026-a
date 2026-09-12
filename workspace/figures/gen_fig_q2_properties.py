@@ -60,9 +60,12 @@ print('[source] bins=%d  C_high=%.4f→C_low=%.4f  rho=%.1f→%.1f  '
          rows[-1, 1], rows[0, 1], rows[-1, 2], rows[0, 2], rows[:, 3].min()),
       flush=True)
 
-# 轴名拆两行（符号 / 单位）：量程写进同一个刻度标签时，长串会与相邻轴重叠。
+# 轴名拆两行（符号 / 单位）：量程写进同一个刻度标签时，"1.77e+03–3.41e+03"
+# 这类长串宽 91 pt，而相邻轴心只隔 69 pt，实测 k 与 D 两条轴的标签直接重叠
+# 2.3 pt（数字/CJK 在 PDF 里并成一个文本行，相撞体检查不到）。改走平行坐标的
+# 常规做法：量程端点分别标在各轴两端，标签只留符号与单位。
 names = ['$\\rho$\n(kg/m³)', '$c_p$\n(J/(kg·K))', '$k$\n(W/(m·K))',
-         '$D$\n(m²/s)', '$T$\n($^{\\circ}$C)']
+         '$D$\n(m²/s)', '$T$\n(℃)']
 lo = rows.min(axis=0)
 hi = rows.max(axis=0)
 norm = (rows - lo) / np.where(hi - lo > 0, hi - lo, 1.0)
@@ -88,6 +91,7 @@ xs = np.arange(len(names))
 for j in range(norm.shape[0]):
     ax.plot(xs, norm[j], color=cmap(0.20 + 0.78 * cnorm[j]), lw=1.0, alpha=0.9)
 
+# 轴线只画到归一化数据区 [0,1]：axvline 会贯穿整个 ylim，直接穿过两端的量程读数
 ax.vlines(xs, 0.0, 1.0, color=C['neutral_mid'], lw=0.7)
 
 sm = __import__('matplotlib').cm.ScalarMappable(cmap=cmap)
@@ -103,7 +107,12 @@ for x, l, h in zip(xs, lo, hi):
 
 ax.set_xticks(xs)
 ax.set_xticklabels(names)
+# 轴名字符串与 main 一致，仍写 (℃)。main 用 Microsoft YaHei 画出 U+2103；
+# 本环境优先中文字体把该字画成空白，刻度改用带实心 ℃ 字形的西文字体。
+for lab in ax.get_xticklabels():
+    lab.set_fontfamily('DejaVu Sans')
 ax.set_xlim(-0.45, len(names) - 0.55)
+# 上下各让出一行：端点量程读数贴在归一化轴的 0 / 1 之外
 ax.set_ylim(-0.26, 1.24)
 ax.set_ylabel('逐轴归一化取值 (—)')
 ax.set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
