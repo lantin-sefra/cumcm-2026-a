@@ -1,4 +1,9 @@
-"""fig_q3_sensitivity — OFAT 灵敏度龙卷风图（output/sensitivity.csv 真算结果）。"""
+"""fig_q3_sensitivity — 历史粗网格灵敏度图脚本（legacy / historical diagnostic）。
+
+读取 output/legacy/sensitivity.csv，不代表最终论文诊断。
+正式灵敏度见 output/final_diagnostics/q3_sensitivity_final.csv。
+⛔ 不要用本脚本覆盖正式 fig_*.pdf。
+"""
 import os
 import sys
 
@@ -8,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _figcommon import C, load_csv, newfig, finish  # noqa: E402
 
-df = load_csv('sensitivity.csv')
+df = load_csv('legacy/sensitivity.csv')
 df.columns = [c.strip().lstrip('﻿') for c in df.columns]
 base = float(df.loc[df['case_id'] == 'BASE', 't_end_h'].iloc[0])
 

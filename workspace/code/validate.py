@@ -1,8 +1,12 @@
-"""数值可信度验证与灵敏度（MODELING_REPORT §9、§10；能力 X-C1）。
+"""LEGACY DIAGNOSTIC — NOT FOR FINAL RESULTS.
 
-产出：
-  output/validation.json —— §9 五类证据 + K1–K24/U/V 检查点，逐项 pass 布尔；
-  output/sensitivity.csv —— SA1–SA10（case_id,param,value,t_end_h,elasticity,note）。
+本文件是历史粗网格 / 旧 χ 关系诊断工具，不代表最终论文结果。
+正式诊断见 output/final_diagnostics/。
+产物写入 output/legacy/（historical diagnostic），不要覆盖正式 result*.xlsx。
+
+历史产出（已移至 output/legacy/）：
+  validation.json —— 旧 §9 五类证据 + K 检查点；
+  sensitivity.csv —— 旧 SA1–SA10（N=20 快评口径）。
 
 §9 证据（按适用性）：
   9.1 质量收支残差（式27）<1e-10（P1/P2/P3/S2）；
@@ -108,7 +112,8 @@ def _p1_fields(N, dt):
 
 
 def ev_grid():
-    """交付网格 N=40 相对参照 N=160/Δt=0.125 的 e_T,e_C（式28，<0.5%）。"""
+    """历史粗网格诊断（非正式结果）：N=40 相对参照 N=160/Δt=0.125 的 e_T,e_C。
+    正式问题一配置为 N=160、dt=0.125 s，不以 N=40 为交付网格。"""
     Tref, Cref = _p1_fields(P.REF_N_CV, P.REF_DT_S)
     T40, C40 = _p1_fields(P.N_CV, P.DT_P1)
     Tscale = max(np.max(np.abs(Tref)), 1.0)
@@ -121,9 +126,9 @@ def ev_grid():
 
 
 def ev_dt_independence():
-    """时间步无关性（式28，X-C1 第2项）：固定 N=40 附录2 温度/浓度场，
-    Δt∈{2,1,0.5}s 相对 Δt=0.5s 参照的 e_T,e_C（<0.5%）。隐式后向 Euler 无条件稳定，
-    三步长收敛证明交付步长（P1 用 1 s）已时间步无关。"""
+    """历史粗网格诊断（非正式结果）：固定 N=40 附录2 温度/浓度场，
+    Δt∈{2,1,0.5}s 相对 Δt=0.5s 参照的 e_T,e_C。
+    正式问题一内部步长为 0.125 s，本函数不代表正式时间步口径。"""
     g = geometry.FixedGeometry(P.R0_M)
 
     def fields(dt):
@@ -267,10 +272,10 @@ def ev_dirichlet():
 
 
 def ev_face_mode():
-    """X-C1 佐证：交付口径（算术平均）网格收敛性 vs 调和平均口径对照。
+    """历史粗网格诊断（非正式结果）：算术平均 vs 调和平均在 N∈{20,40,80} 的对照。
 
-    附录3 固定域 t_end 随 N 的漂移：算术在交付网格 N=40 已收敛（与 N=80 差<1%），
-    调和在 N=40 严重网格依赖（需 N≥320 才收敛到同值）。⛔ 二者质量收支同为机器精度。
+    正式问题三配置为 N=2560、dt=0.25 s、t_end=57.4716 h，不以 N=40 为交付网格。
+    本函数算法保持原样，仅作历史追溯。
     """
     g = geometry.FixedGeometry(P.R0_M)
 
@@ -302,7 +307,7 @@ def ev_face_mode():
 # §10 灵敏度（OFAT）：以附录3 固定域 t_end 为基准（SA1–SA5,SA7,SA10）
 # ---------------------------------------------------------------------------
 def _tend_p3(N=20, **kw):
-    """附录3 固定域 t_end（N=20 快评，方向/弹性用）；kw 透传 CaseConfig 扰动位。"""
+    """历史粗网格诊断：附录3 固定域 t_end（N=20 快评，方向/弹性用）；非正式结果。"""
     g = geometry.FixedGeometry(P.R0_M)
     cfg = D.CaseConfig(name="sa", appendix=3, geom=g, N=N, dt_policy="const",
                        dt_const=P.DT_SEG_COARSE, save_dt_s=P.P34_SAVE_DT_S,
@@ -311,7 +316,7 @@ def _tend_p3(N=20, **kw):
 
 
 def sensitivity(base_res_p3):
-    """SA1–SA10 落 sensitivity.csv；返回 monotonic 探针（logic_probes 用）。
+    """SA1–SA10 落 output/legacy/sensitivity.csv（historical diagnostic）；返回 monotonic 探针。
 
     弹性 S_p=(Δt_end/t_end)/(Δp/p)。方向探针取 +20% 单侧（observed_sign）。
     SA10 直接由基准 maxC 轨迹重定阈值，无需重算。
@@ -357,7 +362,7 @@ def sensitivity(base_res_p3):
     t_sa6 = _tend_p3(dirichlet=True)["t_end_h"]
     rows.append(("SA6", "surface_BC", "Dirichlet", t_sa6, None,
                  "假设3 结构性；Dirichlet⇒t_end 偏短；不改交付"))
-    # SA7 χ 闭合（问题4 移动域，N=20 预检口径）
+    # SA7 χ 闭合（历史粗网格预检 N=20，非正式。正式：χ=1 主模型 / χ=0 交叉验证）
     m0 = D.run(D.CaseConfig(name="sa7a", appendix=4, geom=geometry.MovingGeometry(),
                chi=0, N=20, dt_policy="const", dt_const=P.DT_SEG_COARSE,
                save_dt_s=P.P34_SAVE_DT_S, t_max_s=P.T_END_MAX_S, detect_end=True))["t_end_h"]
@@ -394,8 +399,8 @@ def sensitivity(base_res_p3):
                    "observed_sign": int(np.sign(t_chi - t_clo)),
                    "expect_sign": -1, "expect_dir": "better"})
 
-    # 落盘 sensitivity.csv
-    path = P.OUTPUT_DIR / "sensitivity.csv"
+    # 落盘 legacy/historical diagnostic：sensitivity.csv
+    path = P.OUTPUT_DIR / "legacy" / "sensitivity.csv"
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
@@ -409,7 +414,7 @@ def sensitivity(base_res_p3):
 
 
 # ---------------------------------------------------------------------------
-# 编排：跑各证据 → validation.json
+# 编排：跑各证据 → output/legacy/validation.json（historical diagnostic）
 # ---------------------------------------------------------------------------
 def run_all(shared=None):
     """shared: 可选 dict 复用 main.py 已算的 P1/P3/P4 结果，避免重复求解。"""
@@ -466,8 +471,9 @@ def run_all(shared=None):
             "chi_closure_diff_rel": s4["chi_closure"]["diff_rel"]},
         "all_pass": bool(all_pass),
     }
-    (P.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-    with open(P.OUTPUT_DIR / "validation.json", "w", encoding="utf-8") as f:
+    legacy_dir = P.OUTPUT_DIR / "legacy"
+    legacy_dir.mkdir(parents=True, exist_ok=True)
+    with open(legacy_dir / "validation.json", "w", encoding="utf-8") as f:
         json.dump(validation, f, ensure_ascii=False, indent=2)
     return validation, probes
 

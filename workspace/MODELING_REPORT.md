@@ -1,5 +1,7 @@
 # 2026 高教社杯 A 题「药材的烘干问题」建模与求解方案
 
+> **historical diagnostic / 非正式结果。** 文中 `output/validation.json`、`sensitivity.csv`、`effect_isolation.csv` 及「χ=0 主用」等表述属于早期口径。正式文件角色与 χ 关系见仓库根目录 `README.md` 与 `output/final_diagnostics/`。
+
 > 本文件为流水线第 2 步（comp-modeling）产物。上游依据：`PROBLEM_ANALYSIS.md`、
 > `PROBLEM_FACTS.json`、`DATA_FACTS.json`、`CAPABILITY_CHECKLIST.json`。
 > 下游 comp-code 必须按本文件的**方法指定**、**参数口径表**、**异常处理预案**与**验证检查点**执行。

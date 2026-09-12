@@ -1,7 +1,8 @@
 """问题2：附录3 全程变物性强耦合（MODELING_REPORT §6.3）。
 
 表3/表4 报表窗 t∈{0.5,1,1.5,2,2.5,3} h × r∈{0,0.5,1,1.5,2} cm；
-result2.xlsx 双表覆盖整个烘干过程，A 列步长 1 s。⛔ 3 h 仅报表窗，非物理终止。
+已交付的 result2.xlsx 是问题二要求的前 3 h（1～10800 s）温度与含水率全网格，
+A 列步长 1 s。物理过程继续推进至问题三首达，但 result2 不代表全程烘干结果。
 """
 from __future__ import annotations
 
@@ -48,7 +49,7 @@ def solve(res=None, write=True):
             for h, row in zip(REPORT_TIMES_H, C_tab):
                 w.writerow([f"{h:g}"] + [IO.fmt4(v) for v in row])
 
-        # result2.xlsx：全程 1 s（大表，write_only 流式）。抽样声明见 RESULTS.md。
+        # 已交付 result2.xlsx：前 3 h（1～10800 s）温度与含水率全网格。
         mask = res["t"] >= 1.0 - 1e-9
         IO.write_result_xlsx(P.OUTPUT_DIR / "result2.xlsx",
                              {"温度": res["Tcol"][mask], "水分浓度": res["Ccol"][mask]},
