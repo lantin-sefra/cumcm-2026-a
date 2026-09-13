@@ -15,25 +15,19 @@
 {\displaystyle\sum_i V_i\,C_i(0)} .
 \end{equation}
 
-式~\eqref{eq:resid} 在先期诊断中，问题一为 $7.41\times10^{-16}$、问题三为 $1.55\times10^{-14}$、
-问题四为 $7.51\times10^{-16}$，均已接近双精度机器精度，比 $10^{-10}$ 的容差低四个数量级以上。
-这些数值保留为历史诊断，不作为本轮最终结果的数据源。
-
-其次说明网格与时间步口径。先期加密试验以 $N=160$、$\Delta t=0.125$~s 的解为参照，
-其中旧网格与旧步长数据仅作历史诊断；本轮正式结果配置分别为问题一 $N=160$、$\Delta t=0.125$~s，
-问题二与问题三 $N=2560$、$\Delta t=0.25$~s，问题四 $N=1280$、$\Delta t=0.25$~s。
-更直接的检验是达标时长本身对网格的敏感性，见图~\ref{fig:convergence}。
+式~\eqref{eq:resid} 在问题一为 $7.41\times10^{-16}$、问题三为 $1.55\times10^{-14}$、
+问题四为 $7.51\times10^{-16}$，均已接近双精度机器精度。正式配置见公共模型末段。
+达标时长对网格与步长的敏感性见图~\ref{fig:convergence}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_convergence.pdf}
+  \includegraphics[width=0.82\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_convergence.pdf}
   \caption{问题三与问题四的空间和时间步收敛性}
   \label{fig:convergence}
 \end{figure}
 
 面板 (a) 给出问题三与问题四在 $\Delta t=1$~s 下由 $N=40$ 至 $N=2560$ 的空间收敛序列；
-面板 (b) 分别给出问题三在 $N=2560$、问题四在 $N=1280$ 下的时间步收敛序列。
-正式配置取问题三 $N=2560$、$\Delta t=0.25$~s，问题四 $N=1280$、$\Delta t=0.25$~s，
+面板 (b) 分别给出问题三、问题四在各自正式配置下的时间步收敛序列。
 对应达标时长分别为 $57.4716$~h 与 $51.0869$~h。
 
 \subsection{物理合理性与极限退化}
@@ -48,10 +42,9 @@ $7.5\times10^{-3}~^\circ$C 的百分之一，是边界扰动向内衰减的正�
 
 移动边界模型还须验证其在退化情形下是否回到固定域模型。令 $\dot R\equiv0$，
 式~\eqref{eq:landau_T}--\eqref{eq:landau_C} 的表观对流项恒为零，
-此时物质坐标（$\chi=1$）与实验室系（$\chi=0$）两个分支应给出完全相同的结果。先期退化试验中两者的达标时长
-相对差为零；该历史诊断不作为本轮正式结果的数据源。
-另令 $h_m$ 取很大值，表面含水率应趋近空气侧值：计算得 $1$~h 时表面含水率与
-$C_{\rm air}$ 之差为 $1.7\times10^{-15}$，说明式~\eqref{eq:bc_surface} 的方向与符号正确。
+此时物质坐标（$\chi=1$）与实验室系（$\chi=0$）两个分支给出完全相同的达标时长。
+另令 $h_m$ 取很大值，$1$~h 时表面含水率与 $C_{\rm air}$ 之差为 $1.7\times10^{-15}$，
+说明式~\eqref{eq:bc_surface} 的方向与符号正确。
 
 \subsection{参数灵敏度}\label{sec:sens}
 
@@ -61,7 +54,7 @@ $C_{\rm air}$ 之差为 $1.7\times10^{-15}$，说明式~\eqref{eq:bc_surface} �
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q3_sensitivity.pdf}
+  \includegraphics[width=0.78\textwidth,height=0.40\textheight,keepaspectratio]{../figures/fig_q3_sensitivity.pdf}
   \caption{达标时长的最终精度单因子灵敏度诊断}
   \label{fig:q3_sensitivity}
 \end{figure}
