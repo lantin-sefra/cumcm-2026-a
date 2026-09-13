@@ -32,7 +32,11 @@
   .vseg { display:flex; justify-content:center; }
   .vseg span { display:block; width:0; height:16px; border-left:1px solid #000; }
 
-  .merge { margin-left:450px; height:0; border-top:1px solid #000; }
+  .merge { position:relative; margin-left:450px; height:0; border-top:1px solid #000; }
+  .merge::before { content:""; position:absolute; left:8px; top:-5px;
+                   width:0; height:0;
+                   border-top:5px solid transparent; border-bottom:5px solid transparent;
+                   border-right:8px solid #000; }
 
   .chL { border-left:1px solid #000; }
   .chR { border-right:1px solid #000; }

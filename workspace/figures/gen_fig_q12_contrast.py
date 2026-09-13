@@ -55,12 +55,18 @@ for ax in (axL, axR):
     ax.set_ylim(-0.62, len(y) - 0.38)
 axL.set_yticklabels(['%.1f' % v for v in r_want])
 axL.set_ylabel('径向位置 $r$ (cm)')
-axR.set_yticklabels([])
+axR.set_yticklabels(['%.1f' % v for v in r_want])
+axR.set_ylabel('径向位置 $r$ (cm)')
+axR.yaxis.tick_right()
+axR.yaxis.set_label_position('right')
+axR.spines['left'].set_visible(False)
+axR.spines['right'].set_visible(True)
 
 axL.annotate('%.2f K' % dT2[-1], xy=(-dT2[-1], y[-1] + h / 2),
              xytext=(-9.2, y[-1] + 0.24), color=C['blue_main'])
 axR.annotate('%.3f kg/kg' % dC1[-1], xy=(dC1[-1], y[-1] - h / 2),
              xytext=(0.60, y[-1] - 0.60), color=C['red_1'])
-auto_legend(axL, loc='lower left')
+auto_legend(axL, outside=True, where='top')
+auto_legend(axR, outside=True, where='top')
 
 finish(fig, 'fig_q12_contrast')

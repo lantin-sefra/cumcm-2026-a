@@ -1,4 +1,5 @@
 """fig_q1_validation — 残差诊断四合一：半解析对照 + 逐点偏差 + 网格/时间步收敛 + 守恒残差。"""
+import csv
 import os
 import sys
 
@@ -8,40 +9,55 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from matplotlib.ticker import NullFormatter  # noqa: E402
 
-from _figcommon import (C, M, load, newfig, panel, finish,  # noqa: E402
-                        shared_legend)
+from _figcommon import (C, M, describe_source, load, newfig, panel,  # noqa: E402
+                        finish, shared_legend)
+
+
+def load_formal_rows(filename):
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        'output', 'final_diagnostics', filename)
+    describe_source(path)
+    with open(path, newline='', encoding='utf-8') as handle:
+        return list(csv.DictReader(handle))
 
 d = load('p1')
 
 t = d['t']
-# 半解析序列是既有验证数据；数值曲线改读正式 result1.xlsx。
-with np.load(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                          '_figdata', 'p1.npz')) as hist:
-    ta = hist['t_ana'].copy()
-    ana_center = hist['ana_center'].copy()
-    ana_surf = hist['ana_surf'].copy()
+# 半解析序列读正式诊断 CSV；数值曲线仍读正式 result1.xlsx。
+analytic = load_formal_rows('q1_analytic_validation.csv')
+ta = np.array([float(row['time_s']) for row in analytic])
+ana_center = np.array([float(row['T_center_C']) for row in analytic])
+ana_surf = np.array([float(row['T_surface_C']) for row in analytic])
 num_center = np.interp(ta, t, d['Tcenter'])
 num_surf = np.interp(ta, t, d['Tsurf'])
 dev_c = num_center - ana_center
 dev_s = num_surf - ana_surf
 
-# 已锁定的现成 Q1 收敛数据；正式采用 N=160、Δt=0.125 s。
-Ns = np.array([40.0, 80.0])
-center_N = np.array([33.57545770, 33.57548548])
-surface_N = np.array([36.78558090, 36.78563187])
-ref_center_N = 33.57549243
-ref_surface_N = 36.78564460
+# 已锁定的现成 Q1 收敛数据读正式诊断 CSV；正式采用 N=160、Δt=0.125 s。
+convergence = load_formal_rows('q1_convergence_final.csv')
+
+grid = [row for row in convergence if row['study'] == 'grid']
+grid_reference = next(row for row in grid if row['is_reference'] == 'True')
+grid_points = [row for row in grid if row['is_reference'] == 'False']
+Ns = np.array([float(row['N']) for row in grid_points])
+center_N = np.array([float(row['T_center_C']) for row in grid_points])
+surface_N = np.array([float(row['T_surface_C']) for row in grid_points])
+ref_center_N = float(grid_reference['T_center_C'])
+ref_surface_N = float(grid_reference['T_surface_C'])
 e_center_N = np.abs(center_N - ref_center_N) / abs(ref_center_N)
 e_surface_N = np.abs(surface_N - ref_surface_N) / abs(ref_surface_N)
 
-dts = np.array([1.000, 0.500, 0.250])
-center_dt = np.array([33.57650786, 33.57590766, 33.57560766])
-surface_dt = np.array([36.78620022, 36.78584633, 36.78566938])
-ref_center_dt = 33.57545770
-ref_surface_dt = 36.78558090
+timestep = [row for row in convergence if row['study'] == 'timestep']
+dt_reference = next(row for row in timestep if row['is_reference'] == 'True')
+dt_points = [row for row in timestep if row['is_reference'] == 'False']
+dts = np.array([float(row['dt_s']) for row in dt_points])
+center_dt = np.array([float(row['T_center_C']) for row in dt_points])
+surface_dt = np.array([float(row['T_surface_C']) for row in dt_points])
+ref_center_dt = float(dt_reference['T_center_C'])
+ref_surface_dt = float(dt_reference['T_surface_C'])
 e_center_dt = np.abs(center_dt - ref_center_dt) / abs(ref_center_dt)
 e_surface_dt = np.abs(surface_dt - ref_surface_dt) / abs(ref_surface_dt)
-tol = 0.005
+tol = float(convergence[0]['tolerance'])
 
 fig = newfig(6.4, 5.1, width_fraction=0.98)
 gs = fig.add_gridspec(2, 2, hspace=0.38, wspace=0.30)
