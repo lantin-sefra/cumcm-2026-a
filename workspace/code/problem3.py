@@ -2,7 +2,8 @@
 
 模型与问题2 完全相同，只加终止事件 t_end=min{t:max_r C<0.15}（式17，逐点最大值）。
 表5 行 6,12,18,… h + 末行「烘干结束时间」× r∈{0,0.5,1,1.5,2} cm 浓度；
-result3.xlsx 单表 A 列步长 60 s 覆盖 0→t_end，21 距离列。
+result3.xlsx 单表 A 列步长 60 s，从 60 s 到末个不超过 t_end 的整分点，
+再追加精确达标时刻一行；21 距离列，工作表名 Sheet1。
 """
 from __future__ import annotations
 
@@ -52,14 +53,22 @@ def solve(res=None, write=True):
             corner="水分浓度(kg/kg)  时间(h)\\距离(cm)",
             extra_last_row=(f"烘干结束时间 {t_end_s/P.SEC_PER_HOUR:.3f}h", C_end))
 
-        # result3.xlsx：60 s 子采样至 t_end（含末行 t_end 附近最后 60 s 网格点）
+        # result3.xlsx：60,120,… s（≤t_end）+ 精确达标时刻末行
         step = int(round(P.P34_SAVE_DT_S / P.P2_SAVE_DT_S))   # 60
         mask_idx = np.arange(0, res["t"].size, step)
         tt = res["t"][mask_idx]
-        keep = tt <= t_end_s + 1e-6
+        keep = (tt >= P.P34_SAVE_DT_S - 1e-9) & (tt <= t_end_s + 1e-6)
+        times = tt[keep]
+        cols = res["Ccol"][mask_idx][keep]
+        if res.get("end_C") is not None:
+            C_event = D._interp_cols(res["end_C"], P.R0_M, res["cols_m"])
+        else:
+            C_event = D.field_at_time(res, t_end_s, "C")
+        if times.size == 0 or abs(float(times[-1]) - t_end_s) > 1e-6:
+            times = np.append(times, t_end_s)
+            cols = np.vstack([cols, C_event])
         IO.write_result_xlsx(P.OUTPUT_DIR / "result3.xlsx",
-                             {"Sheet1": res["Ccol"][mask_idx][keep]},
-                             tt[keep])
+                             {"Sheet1": cols}, times)
 
     summary = {
         "problem": 3, "appendix": 3, "N": res["N"],

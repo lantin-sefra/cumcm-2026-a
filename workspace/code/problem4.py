@@ -149,11 +149,23 @@ def _write_table6(res, t_end_s):
 
 
 def _write_result4(res, t_end_s):
-    """result4.xlsx：A 列 60 s；21 固定距离列 + 末列「药材表面」；域外置空。"""
+    """result4.xlsx：Sheet1；A 列 60 s；21 固定距离列 + 末列「药材表面」；
+    域外置空；末行追加精确达标时刻。"""
     keep = (res["t"] >= P.P34_SAVE_DT_S - 1e-9) & (res["t"] <= t_end_s + 1e-6)
     arr = np.column_stack([res["Ccol"][keep], res["Csurf"][keep]])
+    times = res["t"][keep]
+    if res.get("end_C") is not None:
+        R_end = float(res["end_R"]) if res.get("end_R") is not None else float(res["R"][-1])
+        end_fixed = D._interp_cols(res["end_C"], R_end, res["cols_m"])
+        end_surf = float(res["end_C"][-1])
+    else:
+        end_fixed = D.field_at_time(res, t_end_s, "C")
+        end_surf = _surf_at(res, t_end_s)
+    if times.size == 0 or abs(float(times[-1]) - t_end_s) > 1e-6:
+        arr = np.vstack([arr, np.append(end_fixed, end_surf)])
+        times = np.append(times, t_end_s)
     IO.write_result_xlsx(P.OUTPUT_DIR / "result4.xlsx",
-                         {"水分浓度": arr}, res["t"][keep], last_label=SURF_LABEL)
+                         {"Sheet1": arr}, times, last_label=SURF_LABEL)
 
 
 def _write_effect_isolation(scen, prop_h, shrink_h, net_h):

@@ -9,7 +9,7 @@
 以单位轴向长度的圆环控制体为对象写守恒关系。热量方面，控制体内焓的变化率等于经内外两个
 圆柱面净流入的导热量；水分方面，干基含水率的变化率等于净流入的扩散水量。圆柱几何使
 两个圆环面的面积不等（内侧面积小、外侧面积大），这一差异在微分形式中表现为 $1/r$ 因子。
-按傅里叶导热定律与菲克扩散定律闭合通量\upcite{Crank1981}，得到
+按傅里叶导热定律与菲克扩散定律闭合通量\upcite{Tzempelikos2015,Srikiatden2007}，得到
 
 \begin{equation}\label{eq:energy}
 \rho(C)\,c_p(C)\,\frac{\partial T}{\partial t}
@@ -23,8 +23,8 @@
 
 式~\eqref{eq:energy} 中 $T(r,t)$ 为药材内部温度，$\rho$、$c_p$、$k$ 分别为密度、比热容与
 导热系数；式~\eqref{eq:moisture} 中 $C(r,t)$ 为干基含水率，$D$ 为水分有效扩散系数。
-干基含水率以干物质质量为基准，在干物质不迁移的前提下其守恒形式不含密度因子，
-这与以湿基质量分数为变量的写法不同，后者会额外引入密度的时间导数。
+本文依据题给经验扩散关系，将干基含水率 $C$ 作为有效扩散变量，建立 Fick 型有效扩散模型；
+该形式与以湿基质量分数为变量的写法不同，后者会额外引入密度的时间导数，但不声称在一般收缩介质中天然等价于严格局部质量守恒。
 两式的系数都可能依赖 $C$ 与 $T$，因此这是一组非线性抛物型方程，
 其耦合强度完全由所用物性关系决定。
 
@@ -39,7 +39,7 @@
 \end{equation}
 
 其中 $h=25$~W/(m$^2\cdot$K)、$h_m=8\times10^{-7}$~m/s 为题给的对流换热与对流传质系数。
-按第三类边界建模而不用第一类，理由见问题一的分析\upcite{Yilbas2003}。
+按第三类边界建模而不用第一类，理由见问题一的分析\upcite{Tzempelikos2015,Pereira2014}。
 轴心处由几何对称性给出零通量条件
 
 \begin{equation}\label{eq:bc_center}
@@ -61,9 +61,9 @@ T(r,0)=T_0=28~^\circ\mathrm{C},\qquad C(r,0)=C_0=2.55~\mathrm{kg/kg},\qquad R(0)
 其后按平台末值保持 $T_{\rm air}=50.0000~^\circ$C、$C_{\rm air}=0.0500$~kg/kg；
 $50.165~^\circ$C 与 $0.04986$~kg/kg 仅为末采样点。实测段与外推段的衔接见图~\ref{fig:input_chamber}。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.78\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_input_chamber.pdf}
+  \includegraphics[width=0.74\textwidth,height=0.30\textheight,keepaspectratio]{../figures/fig_input_chamber.pdf}
   \caption{附件 1 干燥室工况的双轴时程}
   \label{fig:input_chamber}
 \end{figure}
@@ -107,9 +107,9 @@ $\mathrm{e}^{-3850/T_K}$ 是典型的活化能形式，表示升温促进扩散\
 式~\eqref{eq:prop_app4} 下两条依赖同时接通，两场必须联立推进。
 图~\ref{fig:property_maps} 比较后两套关系中扩散系数在实际工作区间上的分布。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.78\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_property_maps.pdf}
+  \includegraphics[width=0.74\textwidth,height=0.30\textheight,keepaspectratio]{../figures/fig_property_maps.pdf}
   \caption{附录 3 与附录 4 的水分扩散系数分布对比}
   \label{fig:property_maps}
 \end{figure}
@@ -140,7 +140,7 @@ V_N=\pi\left(R-r_{N-1/2}\right)\left(R+r_{N-1/2}\right).
 $r_i$，表面控制体是半宽圆环。若照搬直角坐标下的等体积划分，中心区域的体积会被系统性高估，
 从而低估中心的升温与失水速率。三类控制体在柱截面上的实际几何见图~\ref{fig:cylinder_cv}。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.60\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_cylinder_cv.pdf}
   \caption{圆柱径向有限体积的控制体划分}
@@ -149,7 +149,7 @@ $r_i$，表面控制体是半宽圆环。若照搬直角坐标下的等体积划
 
 图中虚线弧为控制体界面、实心圆点为结点。表面控制体的外向通量由第三类边界
 $q_N=2\pi R\,\beta\,(\varphi_{\rm air}-\varphi_N)$ 给出，其中 $\varphi$ 泛指 $T$ 或 $C$、
-$\beta$ 泛指 $h/(\rho c_p)$ 或 $h_m$；轴心控制体则由式~\eqref{eq:bc_center} 的
+$\beta$ 取 $h$（温度，守恒形）或 $h_m$（含水率）；轴心控制体则由式~\eqref{eq:bc_center} 的
 对称条件关闭，不需要虚拟结点。
 
 \subsection{时间推进、界面物性与耦合处理}
@@ -157,16 +157,16 @@ $\beta$ 泛指 $h/(\rho c_p)$ 或 $h_m$；轴心控制体则由式~\eqref{eq:bc_
 时间方向采用全隐式后向 Euler 格式。对通用标量 $\varphi$，在控制体 $i$ 上积分后得到
 
 \begin{equation}\label{eq:implicit_fv}
-V_i\,\frac{\varphi_i^{n+1}-\varphi_i^{n}}{\Delta t}
+\kappa_i V_i\,\frac{\varphi_i^{n+1}-\varphi_i^{n}}{\Delta t}
 =2\pi r_{i+1/2}\,\Gamma_{i+1/2}\frac{\varphi_{i+1}^{n+1}-\varphi_i^{n+1}}{\Delta r}
 -2\pi r_{i-1/2}\,\Gamma_{i-1/2}\frac{\varphi_i^{n+1}-\varphi_{i-1}^{n+1}}{\Delta r},
 \end{equation}
 
-其中 $\Gamma$ 为对应的输运系数。显式格式受 $\Delta t\le\Delta r^2/(2\alpha)$ 限制，
-本题热扩散率量级下上限约 $0.7$~s，数十小时积分不可行，故采用无条件稳定的全隐式格式。
+其中容量系数 $\kappa$ 在温度方程取 $\rho c_p$、在含水率方程取 $1$，$\Gamma$ 为对应的输运系数（$k$ 或 $D$）。显式格式受 $\Delta t\le\Delta r^2/(2\alpha)$ 限制，
+本题热扩散率量级下上限约 $0.7$~s，数十小时积分不可行，故对每次冻结系数后的扩散子问题采用后向 Euler 全隐式离散；该子问题无条件稳定，整体非线性耦合的收敛性由随后的 Picard 迭代判据控制。
 离散后形成三对角方程组，用 Thomas 算法以 $O(N)$ 求解\upcite{DallOsso2004}。
 界面系数取算术平均 $\Gamma_{i+1/2}=\tfrac12(\Gamma_i+\Gamma_{i+1})$；
-装配系数满足 $a_i,c_i\le 0$ 且 $b_i>|a_i|+|c_i|$，严格对角占优，剖面因此保持单调。
+装配系数满足 $a_i,c_i\le 0$ 且 $b_i>|a_i|+|c_i|$，离散矩阵具有对角占优结构；正式计算未出现非物理振荡，所得温度和含水率剖面保持预期的径向分布特征。
 
 两个场的耦合按固定次序的算子分裂处理。一个时间步内依次完成：
 （1）由旧层的 $(C^n,T^n)$ 计算 $\rho$、$c_p$、$k$；
@@ -178,7 +178,7 @@ V_i\,\frac{\varphi_i^{n+1}-\varphi_i^{n}}{\Delta t}
 温度对传质的促进作用被人为削弱。
 随后以 Picard 迭代复核——用新层场重算物性并重解，直至相邻两次迭代的场变化按绝对值
 低于 $10^{-6}~^\circ$C（温度）与 $10^{-8}$~kg/kg（含水率）——
-以消除分裂本身引入的滞后\upcite{Fromme1997}。
+以消除分裂本身引入的滞后\upcite{HundsdorferVerwer}。
 终止判据只在 Picard 收敛之后检查，避免用尚未收敛的中间场触发停机判定。
 四问的实际计算中 Picard 迭代最多 $3$ 次即达到上述收敛标准，说明所选时间步长下分裂误差很小；
 下界截断在四问中均未被触发，即含水率场自始至终保持为正。

@@ -3,10 +3,11 @@
 % cumcmthesis 不是组委会指定的唯一 TeX 模板。
 % 电子版提交使用 withoutpreface 去掉封面编号页，bwprint 黑白打印
 \documentclass[withoutpreface,bwprint]{cumcmthesis}
+\setCJKmainfont{SimSun}[AutoFakeBold]
 
 % === 额外宏包（cumcmthesis 已内置 amsmath/graphicx/booktabs/listings/hyperref/tabularx/longtable 等）===
 \usepackage[framemethod=TikZ]{mdframed}
-\usepackage[section]{placeins}
+\usepackage{placeins}
 \usepackage{needspace}
 \usepackage{algorithm2e}
 
@@ -24,7 +25,7 @@
 % === 代码高亮设置 ===
 % cls 未设置等宽字体，\ttfamily 落到 Latin Modern Mono，它缺希腊字母/箭头/数学算符，
 % 附录代码注释里的 ξ χ λ ρ Σ ∫ 等会整批丢字。改用 Consolas（覆盖除下列 6 个以外的全部字符）。
-\setmonofont{Consolas}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{Liberation Mono}}
 \lstset{
     language=Python,
     basicstyle=\footnotesize\ttfamily,
@@ -39,7 +40,7 @@
 }
 % Consolas 仍缺 6 个字符。listings 的 literate 只能匹配码位 $\leq$255，对三字节 UTF-8 无效，
 % 故用 \newunicodechar 兜底（cls 已加载该宏包）。℃ 映射为 $^\circ$C，与正文既有写法一致。
-\newfontfamily\mhsymfont{Segoe UI Symbol}
+\IfFontExistsTF{Segoe UI Symbol}{\newfontfamily\mhsymfont{Segoe UI Symbol}}{\newfontfamily\mhsymfont{Noto Sans Symbols2}}
 \newunicodechar{⇒}{\ensuremath{\Rightarrow}}
 \newunicodechar{∈}{\ensuremath{\in}}
 \newunicodechar{≪}{\ensuremath{\ll}}
@@ -75,7 +76,7 @@
 \title{药材热风烘干过程的热-质耦合模型与收缩域烘干时长预测}
 
 % MH-FLOAT-TUNE 受控浮动调参（防整页空白/一页一图）
-% placeins 已由模板/cls 加载，此处不重复注入（避免 Option clash）
+% placeins 不加 [section]，图放不下时后文可先继续排，不在每个 \section 处截断浮动。
 \renewcommand{\topfraction}{0.92}
 \renewcommand{\bottomfraction}{0.9}
 \renewcommand{\textfraction}{0.06}
@@ -85,6 +86,30 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{4}
+\setlength{\abovecaptionskip}{0.28em}
+\setlength{\belowcaptionskip}{0.06em}
+\setlength{\intextsep}{6pt plus 2pt minus 3pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 3pt}
+\setlength{\floatsep}{8pt plus 2pt minus 3pt}
+\renewcommand{\arraystretch}{1.22}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+	{-2.8ex \@plus -0.8ex \@minus -.2ex}%
+	{1.7ex \@plus.15ex}%
+	{\centering\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+	{-2.6ex\@plus -0.8ex \@minus -.2ex}%
+	{1.1ex \@plus .15ex}%
+	{\normalfont\large\bfseries}}
+\def\mh@display@skips{%
+	\abovedisplayskip 8\p@ \@plus2\p@ \@minus5\p@
+	\belowdisplayskip 8\p@ \@plus2\p@ \@minus5\p@
+	\abovedisplayshortskip 3\p@ \@plus2\p@
+	\belowdisplayshortskip 4.5\p@ \@plus2\p@ \@minus2\p@}
+\let\mh@oldnormalsize\normalsize
+\renewcommand\normalsize{\mh@oldnormalsize\mh@display@skips}
+\mh@display@skips
+\makeatother
 \begin{document}
 
 \maketitle
@@ -101,7 +126,7 @@
 独立求解，扩散系数仍随含水率逐点更新。采用\textbf{全隐式有限体积法}离散、Thomas 消元推进
 至 $1800$~s，得中心 $33.5755$~℃ 与 $2.5500$~kg/kg、表面 $36.7856$~℃ 与 $1.5103$~kg/kg。
 热扩散率与扩散系数之比约 $34$，「热先于质」得到定量刻画；以 Bessel 级数叠加 Duhamel 卷积
-独立对照，末时刻温度偏差仅 $0.0012$~℃、全程不超过 $0.0020$~℃。
+独立对照，全程最大温度偏差 $0.24$~mK，末时刻径向最大偏差 $0.15$~mK（$0.00015$~$^\circ$C）。
 
 针对问题二，四条经验式使密度、比热与导热系数随含水率变化，扩散系数同时含
 $\mathrm{e}^{-0.45/C}$ 与活化能因子 $\mathrm{e}^{-3850/T_K}$，两场经物性双向耦合。
@@ -110,7 +135,7 @@ $\mathrm{e}^{-0.45/C}$ 与活化能因子 $\mathrm{e}^{-3850/T_K}$，两场经�
 仍为 \textbf{$1.7662$~kg/kg}、表面 $1.0081$~kg/kg，表明温度场先达准稳态，其后由内部扩散
 阻力控制。
 
-针对问题三，定义达标事件 $t_{\rm end}=\min\{t:\max_r C(r,t)<0.15\}$，取逐点最大值而非
+针对问题三，定义 $t_{\rm end}$ 为最大含水率首次达到阈值 $C_{\rm th}=0.15$ 的时刻，取逐点最大值而非
 体平均（后者会在芯部尚未达标时提前跨过阈值），控制点为含水率最高的轴心，
 并在输出亚步间线性插值定位。
 求得\textbf{烘干时长 $57.4716$~h}，达标时各位置含水率由中心 $0.1500$ 递降至表面 $0.0527$；
@@ -118,11 +143,11 @@ $\mathrm{e}^{-0.45/C}$ 与活化能因子 $\mathrm{e}^{-3850/T_K}$，两场经�
 
 针对问题四，外边界随失水内移，由附件 2 全部 $145$ 个半径数据经单调化与 PCHIP 保形插值给出
 $R(t)$。干基含水率是物质点上的场；在均匀仿射收缩下取物质坐标 $\xi=r/R(t)$（等价于
-$\eta=(r/R)^2$），计算域固定且方程不再含表观对流。正式配置 $N=1280$、$\Delta t=0.25$~s，
-物质坐标主模型求得\textbf{时长 $51.0869$~h}、末态半径 $1.2000$~cm；
-实验室系 Landau（保留对流）交叉验证为 $52.6476$~h，两者相差 $1.5607$~h（$3.0550\%$）。
+$\eta=(r/R)^2$），计算域固定且主闭合不再含表观对流。正式配置 $N=1280$、$\Delta t=0.25$~s，
+$\chi=1$ 主闭合求得\textbf{时长 $51.0869$~h}、末态半径 $1.2000$~cm；
+$\chi=0$ 替代闭合为 $52.6476$~h，两者相差 $1.5607$~h（$3.0550\%$）。
 
-四问质量收支残差均不超过 $1.6\times10^{-14}$；扩散系数前因子是最强不确定度来源。
+四问离散守恒残差均不超过 $1.6\times10^{-14}$；扩散系数前因子是最强不确定度来源。
 忽略潜热会使时长预测偏短（约 $10\%$）。
 
 \keywords{热-质耦合\quad 有限体积法\quad 移动边界\quad 物质坐标\quad 烘干时长预测}
@@ -149,11 +174,15 @@ $\eta=(r/R)^2$），计算域固定且方程不再含表观对流。正式配置
 
 % === 参考文献 ===
 \bibliographystyle{gbt7714-numerical}
-% === AI 工具使用声明（自动插入）===
-\clearpage
+% AI 声明与参考文献自然接排，不再强制另起一页。
 \input{sections/Z_ai_disclosure}
+\vspace{-0.35em}
+\AtBeginEnvironment{thebibliography}{%
+	\setlength{\bibsep}{0.12em plus 0.04em minus 0.04em}%
+	\linespread{1.18}\selectfont}
 \bibliography{references}
 \label{mh:body-end}
+\FloatBarrier
 
 % === 附录 ===
 \begin{appendices}

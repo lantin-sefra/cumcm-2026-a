@@ -72,13 +72,13 @@ $0.1745$~kg/kg，而中心处四位小数下仍显示为 $2.5500$~kg/kg。这一
 
 径向剖面与测点时程合见图~\ref{fig:q1_profiles} 与图~\ref{fig:q1_center_surface}。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
+  \includegraphics[width=0.78\textwidth,height=0.28\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
   \caption{问题一温度与含水率的径向剖面}
   \label{fig:q1_profiles}
-  \vspace{0.5em}
-  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q1_center_surface.pdf}
+  \vspace{0.2em}
+  \includegraphics[width=0.78\textwidth,height=0.28\textheight,keepaspectratio]{../figures/fig_q1_center_surface.pdf}
   \caption{问题一中心与表面测点的时程对照}
   \label{fig:q1_center_surface}
 \end{figure}
@@ -114,9 +114,9 @@ T(r,t)=T_{\rm air}(0)+\int_0^t \frac{\mathrm{d}T_{\rm air}(\tau)}{\mathrm{d}\tau
 边界处理与时间推进都得到了独立确认。本文取前 $30$ 个特征根，并对分段线性的环境时程逐段精确叠加。
 校核结果与网格、步长收敛证据一并给出，见图~\ref{fig:q1_validation}。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q1_validation.pdf}
+  \includegraphics[width=0.82\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_q1_validation.pdf}
   \caption{问题一数值解的四项校核证据}
   \label{fig:q1_validation}
 \end{figure}
@@ -129,8 +129,9 @@ T(r,t)=T_{\rm air}(0)+\int_0^t \frac{\mathrm{d}T_{\rm air}(\tau)}{\mathrm{d}\tau
 $N=160$、$\Delta t=0.125$~s，其中时间步加密固定 $N=40$，空间加密固定 $\Delta t=0.125$~s。
 
 需要说明的是，这一校核只覆盖温度场，因为水分方程含非线性扩散系数，不存在同类级数解。
-水分场的可信度依靠守恒残差与网格收敛证据支撑，详见数值可信度一章。本问的质量收支相对残差为
-$7.41\times10^{-16}$，已接近双精度浮点的机器精度，即离散格式在本问未引入可测的守恒破坏。
+水分场的可信度依靠离散守恒残差与网格收敛证据支撑，详见数值可信度一章。本问的离散守恒相对残差为
+$7.41\times10^{-16}$，已接近双精度浮点的机器精度。该指标用于检验有限体积离散方程的数值一致性，
+不等同于真实系统总水分质量守恒误差。
 按题目要求，$1800$~s 内每隔 $1$~s、距中心每隔 $0.1$~cm 的温度与含水率完整结果
 以双表形式保存于结果文件中，数值保留四位小数；位置坐标由正式网格结点值线性插值至
 $0.1$~cm 间隔。
