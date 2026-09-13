@@ -72,7 +72,7 @@ $0.1745$~kg/kg，而中心处四位小数下仍显示为 $2.5500$~kg/kg。这一
 
 径向剖面与测点时程合见图~\ref{fig:q1_profiles} 与图~\ref{fig:q1_center_surface}。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.78\textwidth,height=0.28\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
   \caption{问题一温度与含水率的径向剖面}
@@ -114,7 +114,7 @@ T(r,t)=T_{\rm air}(0)+\int_0^t \frac{\mathrm{d}T_{\rm air}(\tau)}{\mathrm{d}\tau
 边界处理与时间推进都得到了独立确认。本文取前 $30$ 个特征根，并对分段线性的环境时程逐段精确叠加。
 校核结果与网格、步长收敛证据一并给出，见图~\ref{fig:q1_validation}。
 
-\begin{figure}[H]
+\begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.82\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_q1_validation.pdf}
   \caption{问题一数值解的四项校核证据}

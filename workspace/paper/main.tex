@@ -7,7 +7,7 @@
 
 % === 额外宏包（cumcmthesis 已内置 amsmath/graphicx/booktabs/listings/hyperref/tabularx/longtable 等）===
 \usepackage[framemethod=TikZ]{mdframed}
-\usepackage[section]{placeins}
+\usepackage{placeins}
 \usepackage{needspace}
 \usepackage{algorithm2e}
 
@@ -76,7 +76,7 @@
 \title{药材热风烘干过程的热-质耦合模型与收缩域烘干时长预测}
 
 % MH-FLOAT-TUNE 受控浮动调参（防整页空白/一页一图）
-% placeins 已由模板/cls 加载，此处不重复注入（避免 Option clash）
+% placeins 不加 [section]，图放不下时后文可先继续排，不在每个 \section 处截断浮动。
 \renewcommand{\topfraction}{0.92}
 \renewcommand{\bottomfraction}{0.9}
 \renewcommand{\textfraction}{0.06}
@@ -86,10 +86,30 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{4}
-\setlength{\abovecaptionskip}{0.45em}
-\setlength{\belowcaptionskip}{0.12em}
-\setlength{\intextsep}{8pt plus 2pt minus 4pt}
-\setlength{\textfloatsep}{10pt plus 2pt minus 3pt}
+\setlength{\abovecaptionskip}{0.28em}
+\setlength{\belowcaptionskip}{0.06em}
+\setlength{\intextsep}{6pt plus 2pt minus 3pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 3pt}
+\setlength{\floatsep}{8pt plus 2pt minus 3pt}
+\renewcommand{\arraystretch}{1.22}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+	{-2.8ex \@plus -0.8ex \@minus -.2ex}%
+	{1.7ex \@plus.15ex}%
+	{\centering\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+	{-2.6ex\@plus -0.8ex \@minus -.2ex}%
+	{1.1ex \@plus .15ex}%
+	{\normalfont\large\bfseries}}
+\def\mh@display@skips{%
+	\abovedisplayskip 8\p@ \@plus2\p@ \@minus5\p@
+	\belowdisplayskip 8\p@ \@plus2\p@ \@minus5\p@
+	\abovedisplayshortskip 3\p@ \@plus2\p@
+	\belowdisplayshortskip 4.5\p@ \@plus2\p@ \@minus2\p@}
+\let\mh@oldnormalsize\normalsize
+\renewcommand\normalsize{\mh@oldnormalsize\mh@display@skips}
+\mh@display@skips
+\makeatother
 \begin{document}
 
 \maketitle
@@ -154,13 +174,15 @@ $\chi=0$ 替代闭合为 $52.6476$~h，两者相差 $1.5607$~h（$3.0550\%$）�
 
 % === 参考文献 ===
 \bibliographystyle{gbt7714-numerical}
-% === AI 工具使用声明（自动插入）===
-\clearpage
+% AI 声明与参考文献自然接排，不再强制另起一页。
 \input{sections/Z_ai_disclosure}
-\vspace{-0.75em}
-\setlength{\bibsep}{0.35em plus 0.08em minus 0.08em}
+\vspace{-0.35em}
+\AtBeginEnvironment{thebibliography}{%
+	\setlength{\bibsep}{0.12em plus 0.04em minus 0.04em}%
+	\linespread{1.18}\selectfont}
 \bibliography{references}
 \label{mh:body-end}
+\FloatBarrier
 
 % === 附录 ===
 \begin{appendices}

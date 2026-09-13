@@ -147,7 +147,7 @@ Just choose `xelatex', no `pdflatex' or `latex' and so on.}
 \let\mcm@endoldtabular\endtabular
 \renewenvironment{tabular}%
 	{\bgroup%
-	\renewcommand{\arraystretch}{1.38}%
+	\renewcommand{\arraystretch}{1.22}%
 	\mcm@oldtabular}%
 	{\mcm@endoldtabular\egroup}
 % 每行缩进两个汉字
