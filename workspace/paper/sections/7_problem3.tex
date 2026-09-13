@@ -75,39 +75,26 @@ t_{\rm end}=57.4716~\mathrm{h}\approx 2.39~\mathrm{d},
 末行还显示表面含水率已降至 $0.0527$~kg/kg，远低于阈值，中心与表面相差近三倍——
 这正是不能用平均量判定的直接证据。
 
-判据本身的差别有多大，可由同一次求解的两条曲线读出，见图~\ref{fig:q3_drying_curve}。
+判据差别与干燥速率阶段合见图~\ref{fig:q3_drying_curve} 与图~\ref{fig:q3_rate_curve}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q3_drying_curve.pdf}
+  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q3_drying_curve.pdf}
   \caption{问题三干燥曲线与达标时刻定位}
   \label{fig:q3_drying_curve}
-\end{figure}
-
-图中渐变带表示同一时刻药材内部由表面到芯部的含水率分布范围，带宽即内部不均匀度。
-$C_{\max}$ 触及阈值时体平均含水率只有 $0.1232$~kg/kg，已低于阈值约 $18\%$；
-若改用式~\eqref{eq:cbar} 判定，会在芯部含水率尚有 $0.18$~kg/kg 左右时
-就宣布干燥完成。图中标注的时刻取自最终结果文件，为 $57.4716$~h，与式~\eqref{eq:p3_answer} 一致；
-问题二的前三小时与本问全过程来自同一次连续积分，交界处不存在拼接误差。
-
-\subsection{干燥速率的阶段特征}
-
-干燥文献常把过程分为升速段、恒速段与降速段，其中恒速段由表面蒸发控制、
-降速段由内部扩散控制。本题属于哪一类需要用实际速率曲线回答，见图~\ref{fig:q3_rate_curve}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q3_rate_curve.pdf}
+  \vspace{0.5em}
+  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q3_rate_curve.pdf}
   \caption{问题三干燥速率的两种读法}
   \label{fig:q3_rate_curve}
 \end{figure}
 
-面板 (a) 显示由最终结果文件离散求导得到的速率峰值 $0.6477$~kg/(kg$\cdot$h) 出现在首个输出时刻 $t=0.0167$~h 而非某个中间时刻，
-此后单调衰减，说明本题不存在升速段。面板 (b) 按 Krischer 的方式把速率对体平均含水率作图，
-横轴反向以顺应干燥进程；图中没有出现水平段，即不存在恒速段。
-两个面板合起来给出结论：本题自始至终由内部扩散控制，表面蒸发从未成为限制环节。
-这与式~\eqref{eq:prop_app3} 中扩散系数强烈依赖含水率的形式一致，
-也与前文「限制环节是内部阻力而非供热」的判断相互印证\upcite{Sander1998}。
+图~\ref{fig:q3_drying_curve} 的渐变带为同一时刻由表面到芯部的含水率范围。
+$C_{\max}$ 触及阈值时体平均只有 $0.1232$~kg/kg，已低于阈值约 $18\%$；
+若改用式~\eqref{eq:cbar}，会在芯部尚有约 $0.18$~kg/kg 时宣布完成。
+标注时刻 $57.4716$~h 与式~\eqref{eq:p3_answer} 一致，且与问题二来自同一次连续积分。
+图~\ref{fig:q3_rate_curve}(a) 的速率峰值 $0.6477$~kg/(kg$\cdot$h) 出现在首个输出时刻
+$t=0.0167$~h，此后单调衰减，无升速段；(b) 按 Krischer 方式对 $\bar C$ 作图，无水平段，
+即无恒速段。全过程由内部扩散控制\upcite{Sander1998}。
 
 按题目要求，全过程每隔 $60$~s、距中心每隔 $0.1$~cm 的含水率完整结果保存于结果文件，
 覆盖从初始时刻到 $t_{\rm end}$ 的整个过程。

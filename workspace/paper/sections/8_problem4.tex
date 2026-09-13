@@ -95,17 +95,17 @@ $\chi=0$ 对应把同一经验方程写在实验室参考系后再作 Landau 变
 本文以 $\chi=1$ 的物质坐标为正式主模型：附件 2 的外轮廓半径用于给定移动边界，内部骨架位移
 按仿射场式~\eqref{eq:vs} 闭合。同时把 $\chi=0$ 的 Eulerian/Landau 结果作为交叉验证，
 两者之差作为模型口径差异报告，而不合并成单一数字掩盖这一选择。
-图~\ref{fig:landau_map} 给出该变换的几何含义。
+映射的几何含义见图~\ref{fig:landau_map}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.60\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_landau_map.pdf}
+  \includegraphics[width=0.55\textwidth,height=0.40\textheight,keepaspectratio]{../figures/tikz_landau_map.pdf}
   \caption{归一化坐标把收缩物理域映为固定计算域}
   \label{fig:landau_map}
 \end{figure}
 
-$\chi=0$ 时表观对流项须用一阶迎风离散：$\dot R<0$ 使对流指向 $\xi$ 减小的方向。
-表面附近网格 Péclet 数可超过 $2$，中心差分会破坏对角占优，迎风格式保证解的有界性与单调性。
+$\chi=0$ 时表观对流须用一阶迎风：$\dot R<0$ 使对流指向 $\xi$ 减小的方向；
+表面附近网格 Péclet 数可超过 $2$，中心差分会破坏对角占优。
 
 \subsection{半径时程的构造}
 
@@ -114,19 +114,17 @@ $\chi=0$ 时表观对流项须用一阶迎风离散：$\dot R<0$ 使对流指向
 累积取最小值处理以保证单调不增，再用保形分段三次插值构造连续曲线，其解析导数即 $\dot R(t)$。
 选择保形插值而非普通三次样条的理由是后者可能在数据点之间产生过冲，
 使 $R(t)$ 局部上升、$\dot R$ 变号，与收缩不可逆矛盾\upcite{Fritsch1980}。
-实测点、插值曲线与由此得到的收缩速率见图~\ref{fig:input_shrinkage}。
+对实测半径采用保形 PCHIP 插值，$\dot R(t)$ 由插值函数求导，见图~\ref{fig:input_shrinkage}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_input_shrinkage.pdf}
+  \includegraphics[width=0.72\textwidth,height=0.38\textheight,keepaspectratio]{../figures/fig_input_shrinkage.pdf}
   \caption{附件 2 收缩半径的实测散点、插值与收缩速率}
   \label{fig:input_shrinkage}
 \end{figure}
 
-半径由 $2.000$~cm 降至 $1.198$~cm，即末态体积约为初始的 $36\%$。单调化前后的最大偏差为
-$2.2\times10^{-16}$~cm，说明实测数据本身已经单调，该处理只是保证插值不引入非单调段。
-右轴的 $\dot R(t)$ 是式~\eqref{eq:landau_C} 表观对流项的直接输入，其绝对值在早期最大，
-预示收缩对干燥的影响主要发生在前期。
+半径由 $2.000$~cm 降至 $1.198$~cm，末态体积约为初始的 $36\%$。单调化前后最大偏差仅
+$2.2\times10^{-16}$~cm，实测本身已经单调；$\dot R$ 绝对值在早期最大，收缩影响主要在前期。
 
 \subsection{烘干时长与含水率分布}
 
@@ -168,34 +166,24 @@ $t=6$~h 时半径已收缩至 $1.374$~cm，这两个位置已落在药材之外�
 因为附录 4 的扩散能力更低；但到 $18$~h 两者已接近（$0.4086$ 对 $0.2988$），
 最终本问反而先达标。这一交叉说明两处改动的作用方向相反，必须分离。
 
-收缩域内的场演化见图~\ref{fig:q4_moving_boundary}。
+收缩域内的场演化与分阶段剖面合见图~\ref{fig:q4_moving_boundary} 与图~\ref{fig:q4_triptych}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_moving_boundary.pdf}
+  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q4_moving_boundary.pdf}
   \caption{问题四收缩域内含水率的时空分布与移动边界}
   \label{fig:q4_moving_boundary}
-\end{figure}
-
-图中等高线绘于物理坐标平面，边界外侧不作外推而留空，故色块上缘即真实计算域的边界。
-红线为 $R(t)$，由 $2.000$~cm 收缩至 $1.200$~cm。域的收缩与内部扩散同时进行，
-两者对达标时间的作用方向相反：域缩小使扩散路径变短、有利于干燥，
-而附录 4 的低扩散系数不利于干燥。图中无法直接读出两者各自贡献多少，需要专门设计的对照实验。
-
-按阶段分列的剖面见图~\ref{fig:q4_triptych}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_triptych.pdf}
+  \vspace{0.5em}
+  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q4_triptych.pdf}
   \caption{问题四含水率剖面的三阶段演化}
   \label{fig:q4_triptych}
 \end{figure}
 
-三个面板的横轴为物理半径，故每条剖面的右端点即该时刻的表面位置。面板 (a) 的
-$0$--$12$~h 内边界收缩最快而剖面仍然很陡，说明此阶段表面失水快于内部补给；
-面板 (b) 的 $12$--$36$~h 剖面整体下移、形状变化不大；面板 (c) 中剖面趋于平坦并触及阈值线，
-末态半径 $1.200$~cm。剖面右端点的内移轨迹与图~\ref{fig:input_shrinkage} 中的 $\dot R$
-量级一致，即前期收缩快、后期趋缓。
+图~\ref{fig:q4_moving_boundary} 的等高线绘于物理坐标，外侧留空，红线 $R(t)$ 由
+$2.000$~cm 缩至 $1.200$~cm。域缩小缩短扩散路径，附录 4 的低扩散系数则相反，
+两项贡献须由对照实验分离。图~\ref{fig:q4_triptych} 横轴为物理半径，右端点即当时表面：
+(a) $0$--$12$~h 收缩最快而剖面仍陡；(b) $12$--$36$~h 整体下移；(c) 趋于平坦并触及阈值，
+末态半径 $1.200$~cm，与图~\ref{fig:input_shrinkage} 中前期快、后期缓的 $\dot R$ 一致。
 
 \subsection{收缩效应的定量隔离}
 
@@ -241,7 +229,7 @@ $51.0869$~h，提前 $6.3847$~h（$11.1094\%$）。$S_0$ 不替代问题三。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_shrink_effect.pdf}
+  \includegraphics[width=0.82\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_q4_shrink_effect.pdf}
   \caption{问题四的效应隔离与加性分解（共同网格诊断）}
   \label{fig:q4_shrink_effect}
 \end{figure}
@@ -252,20 +240,10 @@ $S_3=52.6476$~h 与 $S_2$ 的差为 $+1.5607$~h；$S_4=47.7985$~h 为理想化�
 
 \subsection{闭合方式的不确定度与数据自洽性诊断}
 
-物质坐标主模型与实验室系对照之差需要如实量化，见图~\ref{fig:chi_closure}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_chi_closure.pdf}
-  \caption{问题四移动边界闭合方式的最终时程对比}
-  \label{fig:chi_closure}
-\end{figure}
-
-物质坐标主模型（$\chi=1$）给出 $51.0869$~h，Eulerian/Landau 交叉验证（$\chi=0$）给出 $52.6476$~h，相差 $1.5607$~h 即 $3.0550\%$。
-图中全程曲线分别来自正式问题四结果与 $\chi=0$ 最终诊断数据。因此可以判断：
-在本题的收缩速率与扩散系数量级下，把同一经验方程写在实验室系还是物质坐标上属于次要不确定度，
-$51.0869$~h 这一结论不会因该选择而改变量级；但报告时应给出
-$[51.0869,\,52.6476]$~h 这一区间而非单一数字。
+物质坐标主模型（$\chi=1$）给出 $51.0869$~h，Eulerian/Landau 交叉验证（$\chi=0$）给出
+$52.6476$~h，相差 $1.5607$~h 即 $3.0550\%$。两条闭合时程全程接近、末端相差约 $3\%$，
+故把同一经验方程写在实验室系还是物质坐标上属于次要不确定度，量级不变；
+报告时应给出 $[51.0869,\,52.6476]$~h 这一区间而非单一数字。
 
 最后需要报告一项题给数据本身的不相容。若干物质在收缩过程中守恒，则干物质表观密度
 $\rho_s=\rho(C)/(1+C)$ 与半径必须满足 $\rho_s(C_{\rm th})/\rho_s(C_0)=(R_0/R_{\rm end})^2$。

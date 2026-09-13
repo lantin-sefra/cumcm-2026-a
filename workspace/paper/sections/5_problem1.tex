@@ -70,32 +70,24 @@ $0.1745$~kg/kg，而中心处四位小数下仍显示为 $2.5500$~kg/kg。这一
 表面含水率在前 $100$~s 内即降至 $2.2476$~kg/kg，说明表面失水几乎从加热一开始就发生，
 但它并未立即传递到内部。
 
-温度剖面与含水率剖面的空间形态见图~\ref{fig:q1_profiles}。
+径向剖面与测点时程合见图~\ref{fig:q1_profiles} 与图~\ref{fig:q1_center_surface}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
+  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
   \caption{问题一温度与含水率的径向剖面}
   \label{fig:q1_profiles}
-\end{figure}
-
-图中两个面板共用一条时刻色带。温度剖面自初值起整体抬升并保持表面高、中心低，
-梯度在整个半径上都不为零，热扰动已穿透全域。含水率剖面则始终贴合初值线，
-仅在外层出现可见弯折，水分的影响深度不足半径的四分之一。
-
-中心与表面两个测点的时程对照进一步给出量化的层级关系，见图~\ref{fig:q1_center_surface}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q1_center_surface.pdf}
+  \vspace{0.5em}
+  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q1_center_surface.pdf}
   \caption{问题一中心与表面测点的时程对照}
   \label{fig:q1_center_surface}
 \end{figure}
 
-左轴三条温度曲线全程保持空气高于表面、表面高于中心的次序，这与第三类边界的方向一致：
-热流始终由空气流向药材，且表面必须低于空气温度才能维持正向换热。若表面温度追平空气温度，
-则说明表面阻力被忽略，与 $Bi_h=1.389$ 的估计矛盾。右轴的中心含水率曲线在
-$1800$~s 内近乎水平（终值 $2.54999$~kg/kg），可以读出中心水分在预热阶段基本未被动用。
+图~\ref{fig:q1_profiles} 两个面板共用一条时刻色带：温度剖面整体抬升且梯度遍及全域，
+含水率仅在外层弯折，影响深度不足半径的四分之一。
+图~\ref{fig:q1_center_surface} 左轴保持空气高于表面、表面高于中心，与第三类边界方向一致；
+若表面追平空气温度，则与 $Bi_h=1.389$ 矛盾。右轴中心含水率在 $1800$~s 内近乎水平
+（终值 $2.54999$~kg/kg），中心水分基本未被动用。
 
 \subsection{半解析级数解的独立校核}
 
