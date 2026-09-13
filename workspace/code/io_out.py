@@ -1,8 +1,9 @@
 """交付文件落盘（CSV 报表 + result*.xlsx，MODELING_REPORT §11 落盘清单）。
 
-⛔ 全部数值 4 位小数（K3）；问题4 域外单元置空字符串（K17，非 0/NaN 文本，§7.7 式26）；
-result*.xlsx 表头与附件3 模板逐字一致：首格「时间\\到药材中心的距离」+ 距离列（cm）。
-大表（result2 全程 1 s）用 openpyxl write_only 流式写出，避免峰值内存。
+表1–6 的 CSV 仍按 4 位小数写出。result*.xlsx 保存求解器高精度浮点：
+时间列为实际秒（整数秒写 int，达标时刻写非整数 float），域外为空白。
+表头与附件3 模板一致：首格「时间\\到药材中心的距离」+ 距离列（cm）。
+大表用 openpyxl write_only 流式写出，避免峰值内存。
 """
 from __future__ import annotations
 
@@ -36,22 +37,41 @@ def _dist_header(last_label=None):
     return head
 
 
+def time_cell(t):
+    """整数秒写成 int，亚步达标时刻保留 float，与已交付工作簿一致。"""
+    tf = float(t)
+    if abs(tf - round(tf)) < 1e-9:
+        return int(round(tf))
+    return tf
+
+
+def value_cell(x):
+    """result*.xlsx 单元格：有限浮点原样写入，非有限值置空。"""
+    if x is None:
+        return None
+    xf = float(x)
+    if not math.isfinite(xf):
+        return None
+    return xf
+
+
 def write_result_xlsx(path, sheets, times_s, last_label=None):
     """写 result*.xlsx。
 
     sheets : dict 工作表名 -> 2D 数组 (nt, ncol)，ncol=21 或 22（含末列表面）。
-    times_s: 长度 nt 的时间列（秒，整数写出）。
-    数值经 fmt4 转字符串（含置空）；表头由 _dist_header 生成。
+    times_s: 长度 nt 的时间列（秒；整数秒与非整数达标时刻均可）。
+    数值保留求解器精度；域外空白。表头由 _dist_header 生成。
     """
     wb = Workbook(write_only=True)
     header = _dist_header(last_label)
+    times_s = np.asarray(times_s, dtype=float)
     for name, arr in sheets.items():
         ws = wb.create_sheet(title=name)
         ws.append(header)
-        arr = np.asarray(arr)
+        arr = np.asarray(arr, dtype=float)
         for i in range(arr.shape[0]):
-            row = [int(round(times_s[i]))]
-            row.extend(fmt4(v) for v in arr[i])
+            row = [time_cell(times_s[i])]
+            row.extend(value_cell(v) for v in arr[i])
             ws.append(row)
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(str(path))

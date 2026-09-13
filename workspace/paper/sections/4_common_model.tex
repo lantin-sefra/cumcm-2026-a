@@ -149,7 +149,7 @@ $r_i$，表面控制体是半宽圆环。若照搬直角坐标下的等体积划
 
 图中虚线弧为控制体界面、实心圆点为结点。表面控制体的外向通量由第三类边界
 $q_N=2\pi R\,\beta\,(\varphi_{\rm air}-\varphi_N)$ 给出，其中 $\varphi$ 泛指 $T$ 或 $C$、
-$\beta$ 泛指 $h/(\rho c_p)$ 或 $h_m$；轴心控制体则由式~\eqref{eq:bc_center} 的
+$\beta$ 取 $h$（温度，守恒形）或 $h_m$（含水率）；轴心控制体则由式~\eqref{eq:bc_center} 的
 对称条件关闭，不需要虚拟结点。
 
 \subsection{时间推进、界面物性与耦合处理}
@@ -157,12 +157,12 @@ $\beta$ 泛指 $h/(\rho c_p)$ 或 $h_m$；轴心控制体则由式~\eqref{eq:bc_
 时间方向采用全隐式后向 Euler 格式。对通用标量 $\varphi$，在控制体 $i$ 上积分后得到
 
 \begin{equation}\label{eq:implicit_fv}
-V_i\,\frac{\varphi_i^{n+1}-\varphi_i^{n}}{\Delta t}
+\kappa_i V_i\,\frac{\varphi_i^{n+1}-\varphi_i^{n}}{\Delta t}
 =2\pi r_{i+1/2}\,\Gamma_{i+1/2}\frac{\varphi_{i+1}^{n+1}-\varphi_i^{n+1}}{\Delta r}
 -2\pi r_{i-1/2}\,\Gamma_{i-1/2}\frac{\varphi_i^{n+1}-\varphi_{i-1}^{n+1}}{\Delta r},
 \end{equation}
 
-其中 $\Gamma$ 为对应的输运系数。显式格式受 $\Delta t\le\Delta r^2/(2\alpha)$ 限制，
+其中容量系数 $\kappa$ 在温度方程取 $\rho c_p$、在含水率方程取 $1$，$\Gamma$ 为对应的输运系数（$k$ 或 $D$）。显式格式受 $\Delta t\le\Delta r^2/(2\alpha)$ 限制，
 本题热扩散率量级下上限约 $0.7$~s，数十小时积分不可行，故对每次冻结系数后的扩散子问题采用后向 Euler 全隐式离散；该子问题无条件稳定，整体非线性耦合的收敛性由随后的 Picard 迭代判据控制。
 离散后形成三对角方程组，用 Thomas 算法以 $O(N)$ 求解\upcite{DallOsso2004}。
 界面系数取算术平均 $\Gamma_{i+1/2}=\tfrac12(\Gamma_i+\Gamma_{i+1})$；

@@ -49,8 +49,9 @@ def solve(res=None, write=True):
             for h, row in zip(REPORT_TIMES_H, C_tab):
                 w.writerow([f"{h:g}"] + [IO.fmt4(v) for v in row])
 
-        # 已交付 result2.xlsx：前 3 h（1～10800 s）温度与含水率全网格。
-        mask = res["t"] >= 1.0 - 1e-9
+        # 已交付 result2.xlsx：前 3 h（1～10800 s）温度与含水率全网格，不含其后轨迹。
+        mask = ((res["t"] >= 1.0 - 1e-9)
+                & (res["t"] <= 3.0 * P.SEC_PER_HOUR + 1e-9))
         IO.write_result_xlsx(P.OUTPUT_DIR / "result2.xlsx",
                              {"温度": res["Tcol"][mask], "水分浓度": res["Ccol"][mask]},
                              res["t"][mask])
@@ -68,7 +69,8 @@ def solve(res=None, write=True):
         "table4_C": C_tab.round(4).tolist(),
         "report_times_h": list(REPORT_TIMES_H),
         "report_radii_cm": list(REPORT_RADII),
-        "n_rows_result2": int(np.sum(res["t"] >= 1.0 - 1e-9)),
+        "n_rows_result2": int(np.sum((res["t"] >= 1.0 - 1e-9)
+                                     & (res["t"] <= 3.0 * P.SEC_PER_HOUR + 1e-9))),
     }
     return res, summary
 
