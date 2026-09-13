@@ -1,0 +1,61 @@
+{
+  "problem": "2026-CUMCM-A-herb-drying",
+  "delivery_grid": {
+    "N": 40,
+    "dt_P1_s": 1.0,
+    "dt_P234": "seg(2->4)s"
+  },
+  "headline": {
+    "P1_center_C_1800s": 2.549989937114901,
+    "P3_t_end_h": 56.706266437316906,
+    "P4_t_end_h_chi0_primary": 52.18956526252852,
+    "P4_t_end_h_chi1_alt": 50.693953050922325,
+    "P4_chi_closure_uncertainty_rel": -0.028657303506607768,
+    "effect_isolation_h": {
+      "property_swap": 71.8850174621839,
+      "shrinkage": -76.40414424142075,
+      "net_P4_minus_P3": -4.519126779236849
+    }
+  },
+  "validation_all_pass": true,
+  "radius_frozen": false,
+  "logic_probes": {
+    "bounds": [
+      {
+        "quantity": "t_end_hours_P4_chi0_primary",
+        "claim": "upper",
+        "probe_delta_sign": 0,
+        "note": "§7.4 冻结半径使 t_end 偏上界方向；但 S2 达标 52.19h < 附件2 数据 72h，冻结未触发(radius_frozen=False)，交付 t_end 不受冻结抬升，故探针符号=0(不绑定)"
+      }
+    ],
+    "monotonic": [
+      {
+        "of": "t_end",
+        "wrt": "hm",
+        "more": "hm",
+        "then": "t_end",
+        "observed_sign": -1,
+        "expect_sign": -1,
+        "expect_dir": "better"
+      },
+      {
+        "of": "t_end",
+        "wrt": "D_prefactor",
+        "more": "D_prefactor",
+        "then": "t_end",
+        "observed_sign": -1,
+        "expect_sign": -1,
+        "expect_dir": "better"
+      },
+      {
+        "of": "t_end",
+        "wrt": "C_th",
+        "more": "C_th",
+        "then": "t_end",
+        "observed_sign": -1,
+        "expect_sign": -1,
+        "expect_dir": "better"
+      }
+    ]
+  }
+}

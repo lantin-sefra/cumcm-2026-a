@@ -1,0 +1,9 @@
+﻿quantity,value,unit,note
+rho_s_eff(C0=2.55),278.7324,kg/m^3,附录4 干物质表观密度
+rho_s_eff(Cth=0.15),672.6087,kg/m^3,
+ratio_actual,2.4131,-,rho_s(Cth)/rho_s(C0)
+ratio_required,2.7871,-,(R0/R_end)^2 严格守恒要求
+rel_diff,13.42,%,INC1 不相容度
+R_consistent,1.2875,cm,与 rho(C) 守恒相容的末态半径
+R_measured_end,1.1980,cm,附件2 实测末态半径
+# 结论,ρ(C)与R(t)严格干物质守恒下不相容，差13.42%；仅诊断量，不修正R(t)、不作收敛判据,,

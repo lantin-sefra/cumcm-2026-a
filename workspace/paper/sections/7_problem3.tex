@@ -1,0 +1,103 @@
+\section{问题三：逐点达标判据下的烘干时长确定}
+
+\subsection{相对问题二的改动：达标判据的数学定义}
+
+本问的模型与问题二完全相同，唯一新增的是终止条件。判据的定义方式直接决定答案，因此需要单独论证。
+
+干燥过程中含水率沿半径始终不均匀。由表~\ref{tab:p2_C} 可见同一时刻中心最高、表面最低，
+两者可相差数倍。要保证「药材内部含水率降到 $0.15$~kg/kg 以下」，
+必须要求最难干的位置也达标，故把达标时刻定义为逐点最大含水率首次低于阈值的时刻
+
+\begin{equation}\label{eq:tend}
+t_{\rm end}=\min\Bigl\{\,t>0 \;\Bigm|\; \max_{0\le r\le R} C(r,t) < C_{\rm th}\,\Bigr\},
+\qquad C_{\rm th}=0.15~\mathrm{kg/kg}.
+\end{equation}
+
+与式~\eqref{eq:tend} 相对的是以体平均含水率判定的做法
+
+\begin{equation}\label{eq:cbar}
+\bar C(t)=\frac{\displaystyle\int_0^R C(r,t)\,2\pi r\,\mathrm{d}r}{\pi R^2},
+\end{equation}
+
+式~\eqref{eq:cbar} 把径向分布压成一个数，必然在芯部尚未达标时就先跨过阈值，
+从而给出偏短的时长。本文只把 $\bar C$ 作为对照量输出，不用作判据。
+由式~\eqref{eq:bc_center} 的对称条件与解的单调性，含水率最大值总出现在轴心，
+故式~\eqref{eq:tend} 的控制点即 $r=0$。
+
+数值实现上，$C_{\max}(t)$ 只在离散输出步上可得，而阈值一般落在两个输出步之间。
+为不使时长精度受输出间隔限制，在跨越阈值的相邻两步之间对 $C_{\max}$ 作线性插值
+
+\begin{equation}\label{eq:interp}
+t_{\rm end}\approx t^{n}+\Delta t\,
+\frac{C_{\max}(t^{n})-C_{\rm th}}{C_{\max}(t^{n})-C_{\max}(t^{n+1})},
+\end{equation}
+
+式~\eqref{eq:interp} 要求 $C_{\max}(t^n)\ge C_{\rm th}>C_{\max}(t^{n+1})$，
+即定位的是首次跨越而非任意一次低于阈值的时刻。
+
+\subsection{烘干时长与含水率分布}
+
+沿用问题二同一次连续积分的正式配置 $N=2560$、$\Delta t=0.25$~s，得到烘干时长
+
+\begin{equation}\label{eq:p3_answer}
+t_{\rm end}=57.4716~\mathrm{h}\approx 2.39~\mathrm{d},
+\end{equation}
+
+该时刻的逐点最大含水率为 $0.150000$~kg/kg，恰好落在阈值上，控制点位于轴心。
+式~\eqref{eq:p3_answer} 与题目所述「烘干过程一般持续 2--3 天」的量级一致。
+各时刻的含水率分布见表~\ref{tab:p3_C}。
+
+\begin{table}[!htbp]
+\centering
+\caption{烘干过程中药材内部水分浓度（kg/kg）}\label{tab:p3_C}
+\begin{tabular}{cccccc}
+\toprule
+时间 (h) $\backslash$ 距中心距离 (cm) & 0 & 0.5 & 1 & 1.5 & 2 \\
+\midrule
+6  & 1.0170 & 0.9881 & 0.9015 & 0.7550 & 0.5328 \\
+12 & 0.4561 & 0.4432 & 0.4031 & 0.3297 & 0.1642 \\
+18 & 0.2988 & 0.2916 & 0.2687 & 0.2253 & 0.0845 \\
+24 & 0.2378 & 0.2327 & 0.2167 & 0.1855 & 0.0665 \\
+30 & 0.2058 & 0.2018 & 0.1892 & 0.1641 & 0.0598 \\
+36 & 0.1859 & 0.1825 & 0.1718 & 0.1504 & 0.0566 \\
+42 & 0.1721 & 0.1691 & 0.1597 & 0.1407 & 0.0549 \\
+48 & 0.1618 & 0.1592 & 0.1507 & 0.1334 & 0.0537 \\
+54 & 0.1539 & 0.1514 & 0.1436 & 0.1277 & 0.0530 \\
+烘干结束时间 57.4716 h & 0.1500 & 0.1477 & 0.1402 & 0.1249 & 0.0527 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+表中每一行都保持中心含水率最高、表面最低的次序，与式~\eqref{eq:tend} 取轴心为控制点相符。
+前 $12$~h 中心含水率由 $2.55$ 降至 $0.4561$~kg/kg，减少了八成；而从 $12$~h 到 $57.4716$~h
+的四十余小时只再减少 $0.30$~kg/kg。也就是说约五分之四的水分在前四分之一的时间内被除去，
+剩下的时间几乎全部花在把中心含水率从 $0.45$ 压到 $0.15$~kg/kg 上。
+末行还显示表面含水率已降至 $0.0527$~kg/kg，远低于阈值，中心与表面相差近三倍——
+这正是不能用平均量判定的直接证据。
+
+判据差别与干燥速率阶段合见图~\ref{fig:q3_drying_curve} 与图~\ref{fig:q3_rate_curve}。
+
+\begin{figure}[!htbp]
+\centering
+  \includegraphics[width=0.88\textwidth,keepaspectratio]{../figures/fig_q3_drying_curve.pdf}
+  \caption{问题三干燥曲线与达标时刻定位}
+  \label{fig:q3_drying_curve}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.88\textwidth,keepaspectratio]{../figures/fig_q3_rate_curve.pdf}
+  \caption{问题三干燥速率的两种读法}
+  \label{fig:q3_rate_curve}
+\end{figure}
+
+图~\ref{fig:q3_drying_curve} 的渐变带为同一时刻由表面到芯部的含水率范围。
+$C_{\max}$ 触及阈值时体平均只有 $0.1232$~kg/kg，已低于阈值约 $18\%$；
+若改用式~\eqref{eq:cbar}，会在芯部尚有约 $0.18$~kg/kg 时宣布完成。
+标注时刻 $57.4716$~h 与式~\eqref{eq:p3_answer} 一致，且与问题二来自同一次连续积分。
+图~\ref{fig:q3_rate_curve}(a) 的速率峰值 $0.6477$~kg/(kg$\cdot$h) 出现在首个输出时刻
+$t=0.0167$~h，此后单调衰减，无升速段；(b) 按 Krischer 方式对 $\bar C$ 作图，无水平段，
+即无恒速段。全过程由内部扩散控制\upcite{Sander1998}。
+
+按题目要求，全过程每隔 $60$~s、距中心每隔 $0.1$~cm 的含水率完整结果保存于结果文件，
+覆盖从初始时刻到 $t_{\rm end}$ 的整个过程。

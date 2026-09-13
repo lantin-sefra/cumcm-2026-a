@@ -1,0 +1,202 @@
+% 国赛 (CUMCM) 2026 兼容模板
+% 基于社区维护的 latexstudio/CUMCMThesis，并以全国组委会 2026 格式规范为准。
+% cumcmthesis 不是组委会指定的唯一 TeX 模板。
+% 电子版提交使用 withoutpreface 去掉封面编号页，bwprint 黑白打印
+\documentclass[withoutpreface,bwprint]{cumcmthesis}
+
+% === 额外宏包（cumcmthesis 已内置 amsmath/graphicx/booktabs/listings/hyperref/tabularx/longtable 等）===
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{placeins}
+\usepackage{flafter}
+\usepackage{needspace}
+\usepackage{algorithm2e}
+
+% === 参考文献引用（数字型，配合 gbt7714-numerical.bst）===
+%  不要额外加载 cite 宏包 — 它和 natbib 冲突导致编译错误。
+%  必须显式加载 natbib：gbt7714-numerical.bst 产出的是 natbib 风格条目
+%    （\bibitem[作者(年)]{key}），不加载 natbib 时标准 \cite 会把“作者-年”当引用标记
+%    上标出来（而非数字 [1]）。numbers 模式让 \cite 产出数字，cls 的 \upcite 再上标它。
+%    正文引用统一用 \upcite{key} 得数字上标 $^{[1]}$。
+\usepackage[numbers,sort&compress]{natbib}
+
+% === TikZ（cumcmthesis 已加载 tikz，这里只加额外库）===
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+
+% === 代码高亮设置 ===
+% cls 未设置等宽字体，\ttfamily 落到 Latin Modern Mono，它缺希腊字母/箭头/数学算符，
+% 附录代码注释里的 ξ χ λ ρ Σ ∫ 等会整批丢字。改用 Consolas（覆盖除下列 6 个以外的全部字符）。
+\setmonofont{Consolas}
+\lstset{
+    language=Python,
+    basicstyle=\footnotesize\ttfamily,
+    breaklines=true,
+    breakatwhitespace=false,
+    columns=fullflexible,
+    keepspaces=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    extendedchars=true,
+}
+% Consolas 仍缺 6 个字符。listings 的 literate 只能匹配码位 $\leq$255，对三字节 UTF-8 无效，
+% 故用 \newunicodechar 兜底（cls 已加载该宏包）。℃ 映射为 $^\circ$C，与正文既有写法一致。
+\newfontfamily\mhsymfont{Segoe UI Symbol}
+\newunicodechar{⇒}{\ensuremath{\Rightarrow}}
+\newunicodechar{∈}{\ensuremath{\in}}
+\newunicodechar{≪}{\ensuremath{\ll}}
+\newunicodechar{℃}{\ensuremath{^\circ}C}
+% 后两个用 TeX 的 ^^^^ 记法写码位，避免符号本体出现在正文源码里
+\newunicodechar{^^^^26d4}{{\mhsymfont\symbol{"26D4}}}
+\newunicodechar{^^^^26a0}{{\mhsymfont\symbol{"26A0}}}
+
+% === 摘要后排版修复 ===
+%  不再重定义 \@cite —— 引用交给 natbib（上面已 numbers 模式加载），
+%    \upcite 会正确产出数字上标；旧的 \@cite hack 在 natbib 下无效且会干扰，已移除。
+\makeatletter
+% === 修复摘要后排版（cls 的 abstract 结束时有 \newpage\null，可能产生空白页）===
+% 方案：abstract 结束时只换页，不加 \null；正文不生成目录。
+\renewenvironment{abstract}{%
+  \if@twocolumn\section*{\abstractname}%
+  \else\begin{center}{\zihao{3}\bfseries \abstractname\vspace{-.5em}\vspace{\z@}}\end{center}\quotation
+  \fi}{\if@twocolumn\else\endquotation\newpage\fi}
+\makeatother
+
+% === 竞赛信息（电子版提交时注释掉）===
+% \tihao{A}
+% \baominghao{xxxx}
+% \schoolname{[学校名称]}
+% \membera{[成员A]}
+% \memberb{[成员B]}
+% \memberc{[成员C]}
+% \supervisor{[指导老师]}
+% \yearinput{[竞赛年份]}
+% \monthinput{[月]}
+% \dayinput{[日]}
+
+\title{药材热风烘干过程的热-质耦合模型与收缩域烘干时长预测}
+
+% MH-FLOAT-TUNE 受控浮动调参（防整页空白/一页一图）
+% placeins 已由模板/cls 加载，此处不重复注入（避免 Option clash）
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.72}
+\renewcommand{\dbltopfraction}{0.92}
+\renewcommand{\dblfloatpagefraction}{0.72}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+% === MH-DENSE-LAYOUT：紧密排版但不压正文 ===
+% 让图表放不下时后续文字继续排版，浮动体就近转移到页顶/页底；
+% 只收紧浮动体、公式与标题的垂直空白，不改正文字号、页边距和正文行距。
+\setlength{\textfloatsep}{7pt plus 2pt minus 2pt}
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{7pt plus 2pt minus 2pt}
+\captionsetup[figure]{skip=3pt}
+\captionsetup[table]{skip=3pt}
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-2.9ex \@plus -.8ex \@minus -.2ex}%
+  {1.7ex \@plus .2ex}%
+  {\centering\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+  {-2.45ex\@plus -.8ex \@minus -.2ex}%
+  {1.05ex \@plus .2ex}%
+  {\normalfont\large\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+  {-2.35ex\@plus -.7ex \@minus -.2ex}%
+  {1.0ex \@plus .2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{8pt plus 2pt minus 3pt}%
+  \setlength{\belowdisplayskip}{8pt plus 2pt minus 3pt}%
+  \setlength{\abovedisplayshortskip}{4pt plus 2pt}%
+  \setlength{\belowdisplayshortskip}{5pt plus 2pt minus 2pt}%
+}
+% 参考文献保持正文字号，但采用更紧凑的单倍型行距；不改文献内容。
+\AtBeginEnvironment{thebibliography}{%
+  \renewcommand{\baselinestretch}{1.00}\selectfont
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\parskip}{0pt}%
+}
+\begin{document}
+
+\maketitle
+
+% === 摘要 ===
+\begin{abstract}
+
+药材热风烘干的时长取决于内部传热传质阻力。本文以圆柱形药材径向截面为对象，
+建立温度场与含水率场耦合的一维非线性抛物方程组，按预热、变物性、达标时长与
+失水收缩四个层次递进求解。
+
+针对问题一，按傅里叶导热与菲克扩散定律写出柱坐标守恒关系，表面取\textbf{第三类边界}
+（$h=25$~W/(m$^2\cdot$K)、$h_m=8\times10^{-7}$~m/s），轴心取对称零通量。常物性下温度可
+独立求解，扩散系数仍随含水率逐点更新。采用\textbf{全隐式有限体积法}离散、Thomas 消元推进
+至 $1800$~s，得中心 $33.5755$~℃ 与 $2.5500$~kg/kg、表面 $36.7856$~℃ 与 $1.5103$~kg/kg。
+热扩散率与扩散系数之比约 $34$，「热先于质」得到定量刻画；以 Bessel 级数叠加 Duhamel 卷积
+独立对照，末时刻温度偏差仅 $0.0012$~℃、全程不超过 $0.0020$~℃。
+
+针对问题二，四条经验式使密度、比热与导热系数随含水率变化，扩散系数同时含
+$\mathrm{e}^{-0.45/C}$ 与活化能因子 $\mathrm{e}^{-3850/T_K}$，两场经物性双向耦合。
+采用\textbf{保序算子分裂}并以 Picard 迭代复核：先由旧场算热物性解温度，再用新温度算扩散
+系数解含水率，最多 $3$ 次收敛。$3$~h 时中心已升至 $49.8495$~℃ 接近烘房温度，表面温度为 $49.9664$~℃，中心含水率
+仍为 \textbf{$1.7662$~kg/kg}、表面 $1.0081$~kg/kg，表明温度场先达准稳态，其后由内部扩散
+阻力控制。
+
+针对问题三，定义达标事件 $t_{\rm end}=\min\{t:\max_r C(r,t)<0.15\}$，取逐点最大值而非
+体平均（后者会在芯部尚未达标时提前跨过阈值），控制点为含水率最高的轴心，
+并在输出亚步间线性插值定位。
+求得\textbf{烘干时长 $57.4716$~h}，达标时各位置含水率由中心 $0.1500$ 递降至表面 $0.0527$；
+干燥速率自首个输出时刻起单调衰减，全程无恒速段。
+
+针对问题四，外边界随失水内移，由附件 2 全部 $145$ 个半径数据经单调化与 PCHIP 保形插值给出
+$R(t)$。干基含水率是物质点上的场；在均匀仿射收缩下取物质坐标 $\xi=r/R(t)$（等价于
+$\eta=(r/R)^2$），计算域固定且方程不再含表观对流。正式配置 $N=1280$、$\Delta t=0.25$~s，
+物质坐标主模型求得\textbf{时长 $51.0869$~h}、末态半径 $1.2000$~cm；
+实验室系 Landau（保留对流）交叉验证为 $52.6476$~h，两者相差 $1.5607$~h（$3.0550\%$）。
+
+四问质量收支残差均不超过 $1.6\times10^{-14}$；扩散系数前因子是最强不确定度来源。
+忽略潜热会使时长预测偏短（约 $10\%$）。
+
+\keywords{热-质耦合\quad 有限体积法\quad 移动边界\quad 物质坐标\quad 烘干时长预测}
+\end{abstract}
+
+% === 摘要与正文之间的换页 ===
+%  不要在这里加回 \tableofcontents：竞赛论文统一不出目录页。
+% abstract 环境结尾已经换页；这里不再重复 \clearpage，避免空白页边缘情况。
+
+% === 正文 ===
+% 这两个标签只供编译合规检查精确计算 CUMCM 正文页数，不显示在论文中。
+\label{mh:body-start}
+\input{sections/1_restatement}
+\input{sections/2_analysis}
+\input{sections/3_assumptions}
+\input{sections/3b_symbols}
+\input{sections/4_common_model}
+\input{sections/5_problem1}
+\input{sections/6_problem2}
+\input{sections/7_problem3}
+\input{sections/8_problem4}
+\input{sections/9_validation}
+\input{sections/10_evaluation}
+
+% === 参考文献 ===
+\bibliographystyle{gbt7714-numerical}
+% === AI 工具使用声明（自动插入）===
+% 正文浮动体先就近排完，但不强制另起空白页。
+\FloatBarrier
+\input{sections/Z_ai_disclosure}
+% AI 声明后若本页仍有空间，让参考文献直接接排，不人为留下页尾空白。
+\nopagebreak[4]
+\bibliography{references}
+\label{mh:body-end}
+
+% === 附录 ===
+\begin{appendices}
+\input{sections/A_code}
+\end{appendices}
+
+\end{document}

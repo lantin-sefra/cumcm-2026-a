@@ -1,0 +1,27 @@
+{
+  "problem": "2026-CUMCM-A-herb-drying",
+  "stage": "comp-code",
+  "note": "机器可读交付清单，供 delivery_audit 逐条核对『声称产物真实存在且非空』。全部由 code/main.py 经 _utils/run_compute.py 真算落盘，无硬编码。",
+  "deliverables": [
+    {"path": "output/table1_2_problem1.csv", "desc": "问题1 表1温度+表2水分浓度（7时刻×5位置，4位小数）"},
+    {"path": "output/result1.xlsx", "desc": "问题1 完整网格：温度/水分浓度双表，A列1s步长(1..1800)，21距离列"},
+    {"path": "output/table3_4_problem2.csv", "desc": "问题2 表3温度+表4水分浓度（0.5h间隔至3h×5位置）"},
+    {"path": "output/result2.xlsx", "desc": "问题2 完整网格：温度/水分浓度双表，A列1s步长覆盖全烘干过程(204143行)"},
+    {"path": "output/table5_problem3.csv", "desc": "问题3 表5水分浓度（每6h×5位置+烘干结束时间行）"},
+    {"path": "output/result3.xlsx", "desc": "问题3 完整网格：水分浓度，A列60s步长覆盖0→t_end，21距离列"},
+    {"path": "output/table6_problem4.csv", "desc": "问题4 表6水分浓度（每6h×5位置+末列药材表面r=R(t)，域外留空）"},
+    {"path": "output/result4.xlsx", "desc": "问题4 完整网格：水分浓度，A列60s步长，21距离列+末列药材表面，域外留空"},
+    {"path": "output/validation.json", "desc": "§9 五类数值可信度证据 + K9/K10/K12/K13/K18/K19 约束，all_pass=true"},
+    {"path": "output/sensitivity.csv", "desc": "§10 灵敏度 SA1–SA10（参数、扰动、t_end、弹性）"},
+    {"path": "output/effect_isolation.csv", "desc": "问题4 效应隔离 S0–S4 + 式(24)加性分解（换物性/加收缩）"},
+    {"path": "output/mass_consistency.csv", "desc": "问题4 INC1 干物质守恒诊断量（ρ(C)与R(t)不相容度13.4%，仅诊断）"},
+    {"path": "figures/problem_1_results.json", "desc": "问题1 摘要（下游绘图/论文阶段读取）"},
+    {"path": "figures/problem_2_results.json", "desc": "问题2 摘要"},
+    {"path": "figures/problem_3_results.json", "desc": "问题3 摘要"},
+    {"path": "figures/problem_4_results.json", "desc": "问题4 摘要（含效应隔离/χ闭合/INC1）"},
+    {"path": "figures/all_results.json", "desc": "四问总汇 headline + logic_probes（单调性/有界性探针）"},
+    {"path": "RESULTS.md", "desc": "分问题方法+数值结果说明书（本步骤主交付文档）"},
+    {"path": "CAPABILITY_VERDICT.json", "desc": "16条能力项验收结论（8 delivery 自动核 + 8 非delivery 考官判PASS）"},
+    {"path": "code/main.py", "desc": "交付编排入口：P1→P2/3→P4→§9验证→figures汇总"}
+  ]
+}

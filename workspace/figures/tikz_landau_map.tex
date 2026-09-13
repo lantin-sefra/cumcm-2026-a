@@ -1,0 +1,91 @@
+% 图契约（tikz_landau_map）
+%   purpose: 说明 Landau 变换把随时间收缩的物理域映成固定计算域，并交代表观对流项的来源
+%   topology: geometry（物理域两时刻 → 固定计算域的映射构造，单幅连续示意）
+%   node_roles: 网格结点（实心圆点）/ 域端点标号 / 推导注记（文字块）
+%   edge_roles: 物理域与计算域（实线）/ 映射对应（虚线箭头）/ 界面位移（实心箭头）/ 端面刻线（实线）
+%   style_family: G1 几何（辅以 C1 因果：链式法则 → 表观对流项）
+%   annotation_policy: 短公式紧贴其解释的域或端点；完整推导留正文
+%   result_policy: none（不出现任何数值结果）
+%   final_width: 12.0cm 设计宽度，论文按 0.92\textwidth 插入
+%   print_mode: 纯黑白线稿，线型承担语义，不依赖颜色
+\documentclass[border=4pt]{standalone}
+% 本机 MiKTeX 的 expl3 为 2024-01-04，低于 ctex/xeCJK 的下限；fontspec 可用，
+% 故直接绑定宋体，中文换行全部用显式 \\ 控制（不依赖 CJK 自动断行）。
+\usepackage{fontspec}
+\setmainfont{SimSun}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\tikzset{
+  % 语义线型令牌：全部纯黑，层次由线宽与虚实承担
+  spine/.style    = {draw=black, line width=1.3pt},
+  facemark/.style = {draw=black, line width=0.9pt},
+  mapline/.style  = {draw=black, line width=0.6pt, dashed,
+                     -{Latex[length=2.2mm]}},
+  movearrow/.style= {draw=black, line width=1.0pt, -{Latex[length=2.6mm]}},
+  gridnode/.style = {circle, fill=black, inner sep=0pt, minimum size=3.2pt},
+}
+
+\begin{document}
+\adjustbox{max width=\textwidth}{%
+\begin{tikzpicture}[font=\small]
+
+  % ================= 物理域：域长随时间收缩，网格随之被压缩 =================
+  % 上排 t^n
+  \draw[spine] (0,6.4) -- (6.0,6.4);
+  \draw[facemark] (6.0,6.15) -- (6.0,6.65);
+  \foreach \x in {0,1.5,3.0,4.5,6.0} \node[gridnode] at (\x,6.4) {};
+  \node[anchor=south] at (0,6.62) {$r=0$};
+  \node[anchor=south] at (6.0,6.62) {$r=R(t^{n})$};
+
+  % 下排 t^{n+1}：同一物理坐标下域已缩短
+  \draw[spine] (0,4.6) -- (4.6,4.6);
+  \draw[facemark] (4.6,4.35) -- (4.6,4.85);
+  \foreach \x in {0,1.15,2.30,3.45,4.60} \node[gridnode] at (\x,4.6) {};
+  \node[anchor=south] at (0,4.82) {$r=0$};
+  \node[anchor=south] at (4.6,4.82) {$r=R(t^{n+1})$};
+
+  % 界面位移：箭头长度即两时刻半径差，方向指向轴心
+  \draw[movearrow] (5.95,6.15) -- (4.72,5.45);
+  \node[anchor=east] at (4.60,5.75) {$\dot R<0$};
+
+  % ================= 固定计算域：端点恒定、结点不随时间移动 =================
+  \draw[spine] (0,1.6) -- (6.0,1.6);
+  \draw[facemark] (0,1.35) -- (0,1.85);
+  \draw[facemark] (6.0,1.35) -- (6.0,1.85);
+  \foreach \x in {0,1.5,3.0,4.5,6.0} \node[gridnode] at (\x,1.6) {};
+  \node[anchor=north] at (0,1.38) {$\xi=0$};
+  \node[anchor=north] at (6.0,1.38) {$\xi=1$};
+
+  % ================= 映射对应：两个时刻的表面同映到 xi=1 =================
+  \draw[mapline] (6.0,6.10) -- (6.0,2.00);
+  \draw[mapline] (4.6,4.30) -- (5.90,2.00);
+  \draw[mapline] (0,4.35) -- (0,2.00);
+
+  % ================= 注记 =================
+  \node[align=left, text width=5.0cm] at (9.0,4.2)
+       {坐标映射\\[2pt]
+        $\xi=r/R(t)\in[0,1]$\\[2pt]
+        物理域端点随时间移动，\\
+        计算域端点恒为 $0$ 与 $1$};
+
+  \node[align=left, text width=5.0cm] at (9.0,1.6)
+       {计算域网格与时间无关，\\
+        结点数与间距全程固定};
+
+  % 全部写成斜线形式：分式的分子分母会被判为两个相互重叠的文字行
+  \node[align=left, text width=6.6cm] at (3.1,-0.5)
+       {定 $\xi$ 求导与定 $r$ 求导之差\\[3pt]
+        $(\partial\tilde\varphi/\partial t)_{\xi}
+         =(\partial\varphi/\partial t)_{r}
+         +\xi\dot R(t)\,(\partial\varphi/\partial r)_{t}$};
+
+  \node[align=left, text width=5.6cm] at (3.4,-2.6)
+       {该差项进入计算域方程，\\
+        表现为界面运动引起的表观对流\\[3pt]
+        $(1-\chi)\,(\xi\dot R/R)\,(\partial C/\partial\xi)$};
+
+\end{tikzpicture}
+}%
+\end{document}

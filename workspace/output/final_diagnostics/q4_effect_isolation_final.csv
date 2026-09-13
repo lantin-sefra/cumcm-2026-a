@@ -1,0 +1,6 @@
+﻿case_id,description,property_set,geometry,chi,N,dt_s,t_end_s,t_end_h,C_max_end,C_center_end,C_surface_end,R_end_cm,reached,data_source
+S0_bridge,Q3 physics on the common N=1280 diagnostic grid,Appendix3,fixed_R_2cm,n.a.,1280,0.25,206889.3322067109,57.469258946308585,0.15,0.15,0.05265929477138841,2.0,True,Step2B_new_run
+S1,Appendix4 properties with fixed R=2cm,Appendix4,fixed_R_2cm,n.a.,1280,0.25,467432.34110884747,129.84231697467985,0.15,0.15,0.051571451521663064,2.0,True,Step2B_new_run
+S2,"Appendix4 moving boundary, material-following ALE primary",Appendix4,moving_R_attachment2,1,1280,0.25,183912.7498055637,51.08687494598992,0.15,0.15,0.05261999047733342,1.2,True,output/result4.xlsx
+S3,"Appendix4 moving boundary, Eulerian/Landau cross-check",Appendix4,moving_R_attachment2,0,1280,0.25,189531.36485349,52.647601348193,0.15,0.15,0.0526202446719,1.2,True,output/final_diagnostics/q4_chi0_summary.csv
+S4,Appendix4 properties with fixed R=1.198cm,Appendix4,fixed_R_1.198cm,n.a.,1280,0.25,172074.58378084752,47.79849549467987,0.15,0.15,0.052624370218391066,1.198,True,Step2B_new_run

@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "problem_id": "2026A",
+    "note": "附件数据硬事实台账。只填附件里查得到的客观事实，推测一律留 null 或写入 note。行数/量程由 pandas 实测得到，不凭印象。",
+    "files": [
+      {"path": "user_data/附件/附件/附件1.xlsx", "sheets": ["Sheet1"], "n_data_rows": 241, "n_cols": 3,
+       "sha256_prefix": "7ef32870abeef420", "header_row": "时间 | 温度 | 水分浓度"},
+      {"path": "user_data/附件/附件/附件2.xlsx", "sheets": ["Sheet1"], "n_data_rows": 145, "n_cols": 2,
+       "sha256_prefix": "5563acbfa4b4afb1", "header_row": "时间 | 半径"},
+      {"path": "user_data/附件/附件/附件3/result1.xlsx", "sheets": ["温度", "水分浓度"], "n_data_rows": 0,
+       "sha256_prefix": "23b261b295c1b787", "role": "空模板", "header": "时间\\到药材中心的距离 | 0.0 | 0.1 | 0.2 | … | 2.0"},
+      {"path": "user_data/附件/附件/附件3/result2.xlsx", "sheets": ["温度", "水分浓度"], "n_data_rows": 0,
+       "sha256_prefix": "23b261b295c1b787", "role": "空模板", "note": "与 result1.xlsx 字节完全相同（同一 sha256），模板通用"},
+      {"path": "user_data/附件/附件/附件3/result3.xlsx", "sheets": ["Sheet1"], "n_data_rows": 0,
+       "sha256_prefix": "07e4793d620a7f89", "role": "空模板", "header": "时间\\到药材中心的距离 | 0.0 | 0.1 | 0.2 | … | 2.0", "note": "A列行标签示例为 60/120/180/…，与题面「每隔60s」一致"},
+      {"path": "user_data/附件/附件/附件3/result4.xlsx", "sheets": ["Sheet1"], "n_data_rows": 0,
+       "sha256_prefix": "86e9300ffa3d30c4", "role": "空模板", "header": "时间\\到药材中心的距离 | 0.0 | 0.1 | 0.2 | … | 药材表面",
+       "note": "⛔ 末列表头是「药材表面」而非 2.0 —— 与 result1/2/3 的唯一结构差异，印证问题4 的表面位置随时间内移"}
+    ],
+    "ingest_assertion": "下游 comp-code 必须断言：附件1 读到 241 行、附件2 读到 145 行；任一不符即数据未读全，停止并报错"
+  },
+
+  "variables": [
+    {"name": "t_附件1（时间）", "role": "observed", "unit": "s",
+     "range": [0, 14400], "granularity": "minute", "step": 60, "n_points": 241,
+     "censored": {"kind": "none", "at": null}, "has_data": true,
+     "note": "附件1 时间轴等距 60 s，仅覆盖题面所称「烘干初期」0–4 h；问题2/3/4 需要的更长时段无实测环境数据"},
+
+    {"name": "T_air（烘房温度）", "role": "observed", "unit": "degC",
+     "range": [28.0, 50.246], "granularity": "minute", "n_points": 241,
+     "censored": {"kind": "none", "at": null}, "has_data": true,
+     "plateau": {"reached_at_s": 7200, "level": 50.2, "fluctuation_amplitude": 0.25},
+     "note": "0 s 时 28.000 与药材初温完全一致（升温起点）；约 7200 s 后进入 50.2 ℃ 平台并带 ±0.25 ℃ 随机波动（波动形态表明是实测而非设定曲线）。平台段即题面的「恒温干燥阶段」，升温段即「预热平衡阶段」——这是 R1 两阶段划分的数据依据"},
+
+    {"name": "C_air（烘房空气水分浓度）", "role": "observed", "unit": "kg/kg",
+     "range": [0.01963, 0.05025], "granularity": "minute", "n_points": 241,
+     "censored": {"kind": "none", "at": null}, "has_data": true,
+     "plateau": {"reached_at_s": 9000, "level": 0.0499},
+     "note": "⛔ 极易误读：此列是**烘房空气**的含湿量（量级 1e-2），**不是药材的水分浓度**（初值 2.55，量级 1e0，相差两个数量级）。它只作为传质边界条件的环境侧驱动值 C_air，绝不可当作药材 C 的实测值或初值。平台值 0.0499 < 达标阈值 0.15，故 0.15 在数学上可达——这同时反证了「以 C_air 为传质驱动」的边界解释是自洽的"},
+
+    {"name": "t_附件2（时间）", "role": "observed", "unit": "s",
+     "range": [0, 259200], "granularity": "1800s", "step": 1800, "n_points": 145,
+     "censored": {"kind": "none", "at": null}, "has_data": true,
+     "note": "等距 1800 s，覆盖 0–72 h（3 天），与题面「烘干过程一般持续 2-3 天」吻合；构成问题4 时间轴的可用上界"},
+
+    {"name": "R（药材半径）", "role": "observed", "unit": "cm",
+     "range": [1.198, 2.0], "granularity": "1800s", "n_points": 145,
+     "censored": {"kind": "none", "at": null}, "has_data": true,
+     "monotone": "非严格单调递减（末段在 1.198–1.199 间抖动，为测量分辨率 0.001 cm 所致）",
+     "key_points": [{"t_h": 0, "R": 2.0}, {"t_h": 6, "R": 1.374}, {"t_h": 12, "R": 1.248},
+                    {"t_h": 24, "R": 1.204}, {"t_h": 36, "R": 1.2}, {"t_h": 72, "R": 1.198}],
+     "note": "收缩集中在前 10 h（约 6 h 已完成 84% 的半径变化），36 h 后基本停止；末态 R/R0 = 0.599，(R/R0)^2 = 0.3588。⛔ 收缩时间尺度（~10 h）远短于干燥时间尺度（~50 h），故 R(t) 不能简单视为体平均含水率的单值函数——见 inconsistencies[0]"},
+
+    {"name": "T(r,t)（药材内部温度）", "role": "assumed", "unit": "degC",
+     "range": null, "granularity": null, "censored": {"kind": "none", "at": null}, "has_data": false,
+     "note": "⛔ 本题的待求量，附件中无任何实测内部剖面。因此**不存在外部实验验证数据**，模型可信度只能靠内部一致性证据支撑：网格/时间步收敛性、与线性常物性情形半解析解对照、能量/质量守恒残差、量级校验（2–3 天）。正文禁止用「与实测吻合良好」这类口吻"},
+
+    {"name": "C(r,t)（药材内部水分浓度）", "role": "assumed", "unit": "kg/kg",
+     "range": null, "granularity": null, "censored": {"kind": "none", "at": null}, "has_data": false,
+     "note": "同上，待求量，无实测。唯一可间接对照的是附件2 的 R(t)（问题4）——可反演体平均含水率做一致性检查，但见 inconsistencies[0]"},
+
+    {"name": "h（对流换热系数）", "role": "setpoint", "unit": "W/(m^2·K)",
+     "range": [25, 25], "granularity": "constant", "censored": {"kind": "none", "at": null}, "has_data": true,
+     "note": "题面附录2 给定的常数，非实测。附录3/4 未重新给出，问题2/3/4 沿用（见 PROBLEM_FACTS.rules.R6）"},
+
+    {"name": "h_m（对流传质系数）", "role": "setpoint", "unit": "m/s",
+     "range": [8e-07, 8e-07], "granularity": "constant", "censored": {"kind": "none", "at": null}, "has_data": true,
+     "note": "题面附录2 给定的常数，非实测。与 D 共同决定 Bi_m = h_m·R/D ≈ 3.2（C=2.55 时），属内外阻力可比区间"}
+  ],
+
+  "given": [
+    {"name": "药材长度", "kind": "constant", "raw_quote": "长为 25 cm", "value": 25, "unit": "cm", "must_use_verbatim": true},
+    {"name": "药材初始半径", "kind": "constant", "raw_quote": "半径为 2 cm", "value": 2, "unit": "cm", "must_use_verbatim": true},
+    {"name": "初始温度", "kind": "constant", "raw_quote": "药材的温度为 28 ℃", "value": 28, "unit": "degC", "must_use_verbatim": true},
+    {"name": "初始水分浓度", "kind": "constant", "raw_quote": "水分浓度（即干基含水率）为 2.55 kg/kg", "value": 2.55, "unit": "kg/kg", "must_use_verbatim": true},
+    {"name": "达标阈值", "kind": "constant", "raw_quote": "药材各处的水分浓度应低于 0.15 kg/kg", "value": 0.15, "unit": "kg/kg", "must_use_verbatim": true},
+
+    {"name": "附录2 扩散系数", "kind": "formula", "raw_quote": "D = 7 × 10^{-9} e^{-0.89/C}",
+     "form": "D = 7e-9 * exp(-0.89/C)",
+     "acts_on": "⛔ 指数作用在 **1/C** 上、整体作用在**扩散系数 D 本身**（不是作用在通量或 dC/dr 上）。**不含**温度项——不要把附录3 的 exp(-3850/T) 顺手补进来。C 用 kg/kg 干基原值，**不是**百分数、**不是**湿基分率",
+     "must_use_verbatim": true},
+
+    {"name": "附录3 密度", "kind": "formula", "raw_quote": "ρ = 650 + 128C", "form": "rho = 650 + 128*C",
+     "acts_on": "线性作用在**干基含水率 C** 上（不是 C/(C+1)）。注意同一附录里 ρ 用 C、而 c_p 与 k 用 C/(C+1)，两种自变量并存，**不可混用**", "must_use_verbatim": true},
+    {"name": "附录3 比热容", "kind": "formula", "raw_quote": "c_p = 1450 + 2736 · C/(C+1)", "form": "cp = 1450 + 2736*C/(C+1)",
+     "acts_on": "线性作用在**湿基分率 C/(C+1)** 上（不是 C）", "must_use_verbatim": true},
+    {"name": "附录3 热传导系数", "kind": "formula", "raw_quote": "k = 0.21 + 0.38 · C/(C+1)", "form": "k = 0.21 + 0.38*C/(C+1)",
+     "acts_on": "线性作用在**湿基分率 C/(C+1)** 上", "must_use_verbatim": true},
+    {"name": "附录3 扩散系数", "kind": "formula", "raw_quote": "D = 2.4 × 10^{-3} e^{-0.45/C} e^{-3850/T}",
+     "form": "D = 2.4e-3 * exp(-0.45/C) * exp(-3850/T)",
+     "acts_on": "⛔ 两个指数**相乘**作用在 D 上：一项作用在 1/C，一项作用在 1/T。**T 必须用绝对温度 K**（题面明示「T 为药材温度（单位：K）」）；若误用 ℃，在 50 ℃ 处 exp(-3850/50) 与 exp(-3850/323.15) 相差约 10^{21} 倍，模型会彻底失真。T 取**药材局部温度**，不是烘房温度",
+     "must_use_verbatim": true},
+
+    {"name": "附录4 密度", "kind": "formula", "raw_quote": "ρ = 760 + 90C", "form": "rho = 760 + 90*C",
+     "acts_on": "线性作用在**干基含水率 C** 上", "must_use_verbatim": true},
+    {"name": "附录4 比热容", "kind": "formula", "raw_quote": "c_p = 1850 + 2150 · C/(C+1)", "form": "cp = 1850 + 2150*C/(C+1)",
+     "acts_on": "线性作用在**湿基分率 C/(C+1)** 上", "must_use_verbatim": true},
+    {"name": "附录4 热传导系数", "kind": "formula", "raw_quote": "k = 0.12 + 0.20 · C/(C+1)", "form": "k = 0.12 + 0.20*C/(C+1)",
+     "acts_on": "线性作用在**湿基分率 C/(C+1)** 上", "must_use_verbatim": true},
+    {"name": "附录4 扩散系数", "kind": "formula", "raw_quote": "D = 4.2 × 10^{-4} e^{-0.30/C} e^{-3850/T}",
+     "form": "D = 4.2e-4 * exp(-0.30/C) * exp(-3850/T)",
+     "acts_on": "同附录3 结构，T 用 K。⛔ 附录4 **只用于问题4**，不要与附录3 的系数串台（两组结构相同、仅系数不同，是最容易抄错的地方）",
+     "must_use_verbatim": true}
+  ],
+
+  "inconsistencies": [
+    {"id": "INC1",
+     "finding": "附录4 的 ρ(C) = 760 + 90C 与附件2 的 R(t) 末值 1.198 cm 不能同时满足干物质守恒。",
+     "evidence": "干物质表观密度 ρ_s = ρ/(1+C)：C=2.55 时 ρ_s = 278.73 kg/m³；C=0 时 ρ_s = 760 kg/m³。仅径向收缩下 (R/R0)^2 = ρ_s(C0)/ρ_s(C)，故 C→0 时 R 的理论下限为 2×sqrt(278.73/760) = 1.2112 cm。而附件2 实测末值为 1.198 cm，(R/R0)^2 = 0.3588 < 0.3668，反解得 C = −0.0245 < 0，无物理意义。",
+     "magnitude": "半径相差 0.013 cm（约 1.1%），在测量精度量级附近，但符号上不可调和",
+     "implication": "问题4 **不能**由 ρ(C) 经守恒关系反推 R(t)，也不能反过来用 R(t) 校准 ρ(C)。题面「请根据附件2」已指定 R(t) 为**给定数据**，故应把 R(t) 作为规定的移动边界直接使用，并把这一不自洽作为模型局限显式声明。",
+     "action_for_downstream": "comp-modeling 采用规定移动边界（Landau 变换）；comp-code 输出干物质质量守恒残差作为诊断量而非收敛判据；论文在模型评价中如实讨论"},
+    {"id": "INC2",
+     "finding": "附件2 的收缩时间尺度远短于干燥时间尺度。",
+     "evidence": "半径在前 6 h 完成 84%、10 h 后基本稳定、36 h 后停止；而中心含水率降到 0.15 需约 51 h（本步骤预检值）。",
+     "implication": "R(t) 不是体平均含水率的单值函数，二者不同步。若强行假设 R = f(C̄) 会与附件2 矛盾。",
+     "action_for_downstream": "R(t) 只作时间的已知函数插值，不建立 R–C 的本构关系"}
+  ]
+}

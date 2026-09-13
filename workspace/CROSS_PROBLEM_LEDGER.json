@@ -1,0 +1,89 @@
+{
+  "schema": "cross_problem_ledger/v1",
+  "problem": "2026-CUMCM-A-herb-drying",
+  "generated_by": "comp-modeling",
+  "shared_verbatim": {
+    "T0_celsius": 28.0,
+    "C0_dry_basis": 2.55,
+    "R0_m": 0.02,
+    "L_m": 0.25,
+    "h_W_m2_K": 25.0,
+    "hm_m_s": 8e-07,
+    "ambient_source": "attachment1_241rows_linear_interp_plus_plateau",
+    "T_air_plateau_celsius": 50.165,
+    "C_air_plateau": 0.04986,
+    "discretization": "finite_volume_half_control_volume_surface_node_N40",
+    "time_scheme": "backward_euler_implicit_picard",
+    "interface_property": "harmonic_mean"
+  },
+  "per_problem": [
+    {
+      "id": "P1", "appendix": 2, "domain": "fixed_R0", "target": "fields_T_and_C",
+      "time_window_s": [0, 1800], "criterion": null,
+      "outputs": ["output/table1_2_problem1.csv", "output/result1.xlsx"],
+      "validation": ["9.1", "9.2", "9.3", "9.4", "9.5"],
+      "capabilities": ["P1-C1", "P1-C2", "P1-C3", "P1-C4"]
+    },
+    {
+      "id": "P2", "appendix": 3, "domain": "fixed_R0", "target": "fields_T_and_C",
+      "time_window_s": [0, 10800], "time_window_role": "report_window_not_physical_end",
+      "criterion": null,
+      "outputs": ["output/table3_4_problem2.csv", "output/result2.xlsx"],
+      "validation": ["9.1", "9.2", "9.4"],
+      "capabilities": ["P2-C1", "P2-C2", "P2-C3", "P2-C4"]
+    },
+    {
+      "id": "P3", "appendix": 3, "domain": "fixed_R0", "target": "t_end",
+      "criterion": "max_r C < 0.15 first arrival",
+      "precheck_t_end_h": 56.178,
+      "outputs": ["output/table5_problem3.csv", "output/result3.xlsx"],
+      "validation": ["9.1", "9.2", "9.4"],
+      "capabilities": ["P3-C1", "P3-C2", "P3-C3"]
+    },
+    {
+      "id": "P4", "appendix": 4, "domain": "moving_boundary_R_of_t_attachment2",
+      "target": "t_end", "criterion": "max_xi C < 0.15 first arrival",
+      "closure": {"primary_chi": 0, "alternative_chi": 1,
+                  "precheck_t_end_h_chi0": 52.105, "precheck_t_end_h_chi1": 50.544,
+                  "closure_diff_rel": 0.03,
+                  "primary_reason": "eqs_written_in_lab_frame_no_skeleton_displacement_given_and_affine_premise_disproved_by_INC1_13.42pct"},
+      "table6_last_column": "herb_surface_r_equals_R_of_t_NOT_fixed_2cm",
+      "outputs": ["output/table6_problem4.csv", "output/result4.xlsx", "output/effect_isolation.csv"],
+      "validation": ["9.1", "9.2", "9.4", "9.5c"],
+      "capabilities": ["P4-C1", "P4-C2", "P4-C3", "P4-C4"]
+    }
+  ],
+  "effect_isolation": {
+    "scenarios": [
+      {"id": "S0", "appendix": 3, "domain": "fixed_2cm", "t_end_h": 56.178, "role": "deliverable_P3"},
+      {"id": "S1", "appendix": 4, "domain": "fixed_2cm", "t_end_h": 128.063, "role": "control",
+       "note": "exempt_from_H18_range_check_physically_inconsistent_by_construction"},
+      {"id": "S2", "appendix": 4, "domain": "R_of_t_chi0", "t_end_h": 52.105, "role": "deliverable_P4"},
+      {"id": "S3", "appendix": 4, "domain": "R_of_t_chi1", "t_end_h": 50.544, "role": "closure_uncertainty"},
+      {"id": "S4", "appendix": 4, "domain": "fixed_1.198cm", "t_end_h": 47.26, "role": "lower_bound_reference"}
+    ],
+    "decomposition": {
+      "net_P4_minus_P3_h": -4.073,
+      "property_swap_h": 71.885,
+      "shrinkage_h": -75.958,
+      "identity": "net == property_swap + shrinkage",
+      "warning": "two_large_nearly_cancelling_effects_never_attribute_net_to_single_cause"
+    }
+  },
+  "information_flow_bans": [
+    "P1 must not use appendix3 or appendix4 coefficients",
+    "P2 and P3 must not use appendix4 coefficients",
+    "P3 must not use attachment2 R(t) shrinkage data",
+    "P1 bessel series validation does not transfer to P2/P3/P4 concentration fields",
+    "P4 vs P3 comparison requires effect isolation before any causal statement"
+  ],
+  "cross_stage_notes": {
+    "no_measured_field_data": true,
+    "forbidden_phrase": "agrees well with measurement",
+    "latent_heat_omitted_bias": "t_end underestimated (optimistically short)",
+    "radius_frozen_after_48h_bias": "t_end on upper-bound side",
+    "surface_node_discretization_diff": {"this_model": 1.5104, "upstream_precheck": 1.3906,
+                                          "quantity": "C_surface_P1_at_1800s",
+                                          "adopted": "half_control_volume"}
+  }
+}
