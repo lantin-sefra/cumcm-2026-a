@@ -27,7 +27,7 @@ $\Delta t=0.125$~s，推进至 $1800$~s。
 按题目要求的时刻与位置整理结果，见表~\ref{tab:p1_T} 与表~\ref{tab:p1_C}。
 
 \begin{table}[H]
-\centering
+\centering\small\renewcommand{\arraystretch}{1.15}
 \caption{预热阶段药材内部温度（$^\circ$C）}\label{tab:p1_T}
 \begin{tabular}{cccccc}
 \toprule
@@ -45,7 +45,7 @@ $\Delta t=0.125$~s，推进至 $1800$~s。
 \end{table}
 
 \begin{table}[H]
-\centering
+\centering\small\renewcommand{\arraystretch}{1.15}
 \caption{预热阶段药材内部水分浓度（kg/kg）}\label{tab:p1_C}
 \begin{tabular}{cccccc}
 \toprule
@@ -74,11 +74,11 @@ $0.1745$~kg/kg，而中心处四位小数下仍显示为 $2.5500$~kg/kg。这一
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
+  \includegraphics[width=0.84\textwidth,height=0.30\textheight,keepaspectratio]{../figures/fig_q1_profiles.pdf}
   \caption{问题一温度与含水率的径向剖面}
   \label{fig:q1_profiles}
-  \vspace{0.5em}
-  \includegraphics[width=0.88\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q1_center_surface.pdf}
+  \vspace{0.25em}
+  \includegraphics[width=0.84\textwidth,height=0.30\textheight,keepaspectratio]{../figures/fig_q1_center_surface.pdf}
   \caption{问题一中心与表面测点的时程对照}
   \label{fig:q1_center_surface}
 \end{figure}
@@ -116,7 +116,7 @@ T(r,t)=T_{\rm air}(0)+\int_0^t \frac{\mathrm{d}T_{\rm air}(\tau)}{\mathrm{d}\tau
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q1_validation.pdf}
+  \includegraphics[width=0.82\textwidth,height=0.48\textheight,keepaspectratio]{../figures/fig_q1_validation.pdf}
   \caption{问题一数值解的四项校核证据}
   \label{fig:q1_validation}
 \end{figure}

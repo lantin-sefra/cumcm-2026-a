@@ -19,14 +19,6 @@
 不等同于真实系统总水分质量守恒误差。问题一、问题三与问题四的离散守恒残差分别为
 $7.41\times10^{-16}$、$1.55\times10^{-14}$ 与 $7.51\times10^{-16}$，均已接近双精度机器精度。正式配置见公共模型末段。
 达标时长对网格与步长的敏感性见图~\ref{fig:convergence}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.82\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_convergence.pdf}
-  \caption{问题三与问题四的空间和时间步收敛性}
-  \label{fig:convergence}
-\end{figure}
-
 面板 (a) 给出问题三与问题四在 $\Delta t=1$~s 下由 $N=40$ 至 $N=2560$ 的空间收敛序列；
 面板 (b) 分别给出问题三、问题四在各自正式配置下的时间步收敛序列。
 对应达标时长分别为 $57.4716$~h 与 $51.0869$~h。
@@ -55,7 +47,7 @@ $7.5\times10^{-3}~^\circ$C 的百分之一，是边界扰动向内衰减的正�
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.78\textwidth,height=0.40\textheight,keepaspectratio]{../figures/fig_q3_sensitivity.pdf}
+  \includegraphics[width=0.78\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q3_sensitivity.pdf}
   \caption{达标时长的最终精度单因子灵敏度诊断}
   \label{fig:q3_sensitivity}
 \end{figure}

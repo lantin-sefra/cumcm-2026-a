@@ -152,10 +152,10 @@ Just choose `xelatex', no `pdflatex' or `latex' and so on.}
 	{\mcm@endoldtabular\egroup}
 % 每行缩进两个汉字
 \setlength\parindent{2em}
-% 设置字体
-\setmainfont{Times New Roman}
+% 设置字体（本机缺 Windows 核心字体时回退到度量兼容替代，以免编译中断）
+\IfFontExistsTF{Times New Roman}{\setmainfont{Times New Roman}}{\setmainfont{Liberation Serif}}
 %\setmonofont{Courier New}
-\setsansfont{Arial}
+\IfFontExistsTF{Arial}{\setsansfont{Arial}}{\setsansfont{Liberation Sans}}
 \setCJKfamilyfont{kai}[AutoFakeBold]{simkai.ttf}
 \newcommand*{\kai}{\CJKfamily{kai}}
 \setCJKfamilyfont{song}[AutoFakeBold]{SimSun}

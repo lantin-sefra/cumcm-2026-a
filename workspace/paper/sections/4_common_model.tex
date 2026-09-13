@@ -63,7 +63,7 @@ $50.165~^\circ$C 与 $0.04986$~kg/kg 仅为末采样点。实测段与外推段�
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.78\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_input_chamber.pdf}
+  \includegraphics[width=0.76\textwidth,height=0.32\textheight,keepaspectratio]{../figures/fig_input_chamber.pdf}
   \caption{附件 1 干燥室工况的双轴时程}
   \label{fig:input_chamber}
 \end{figure}
@@ -105,14 +105,7 @@ $\mathrm{e}^{-3850/T_K}$ 是典型的活化能形式，表示升温促进扩散\
 式~\eqref{eq:energy} 的系数与 $C$ 无关，且 $D$ 不含温度。在问题一的物性关系下，温度方程与水分方程
 完全解耦：温度场可独立求解，水分场仅通过 $D(C)$ 与自身含水率发生非线性关联，无需调用温度场结果。式~\eqref{eq:prop_app3} 与
 式~\eqref{eq:prop_app4} 下两条依赖同时接通，两场必须联立推进。
-图~\ref{fig:property_maps} 比较后两套关系中扩散系数在实际工作区间上的分布。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.78\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_property_maps.pdf}
-  \caption{附录 3 与附录 4 的水分扩散系数分布对比}
-  \label{fig:property_maps}
-\end{figure}
+后两套扩散系数在工作区间上的分布见图~\ref{fig:property_maps}。
 
 在 $C\in[0.15,2.55]$、$T\in[28,50]~^\circ$C 上，附录 3 的扩散系数覆盖
 $3.35\times10^{-10}$--$1.35\times10^{-8}$~m$^2$/s，附录 4 覆盖
@@ -142,7 +135,7 @@ $r_i$，表面控制体是半宽圆环。若照搬直角坐标下的等体积划
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.60\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_cylinder_cv.pdf}
+  \includegraphics[width=0.60\textwidth,height=0.42\textheight,keepaspectratio]{../figures/tikz_cylinder_cv.pdf}
   \caption{圆柱径向有限体积的控制体划分}
   \label{fig:cylinder_cv}
 \end{figure}

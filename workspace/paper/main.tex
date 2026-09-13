@@ -3,6 +3,8 @@
 % cumcmthesis 不是组委会指定的唯一 TeX 模板。
 % 电子版提交使用 withoutpreface 去掉封面编号页，bwprint 黑白打印
 \documentclass[withoutpreface,bwprint]{cumcmthesis}
+% Linux 默认 Fandol 与 Windows 宋体行宽不同；强制正文用仓库自带 SimSun，避免页数漂移。
+\setCJKmainfont{SimSun}[AutoFakeBold]
 
 % === 额外宏包（cumcmthesis 已内置 amsmath/graphicx/booktabs/listings/hyperref/tabularx/longtable 等）===
 \usepackage[framemethod=TikZ]{mdframed}
@@ -24,7 +26,7 @@
 % === 代码高亮设置 ===
 % cls 未设置等宽字体，\ttfamily 落到 Latin Modern Mono，它缺希腊字母/箭头/数学算符，
 % 附录代码注释里的 ξ χ λ ρ Σ ∫ 等会整批丢字。改用 Consolas（覆盖除下列 6 个以外的全部字符）。
-\setmonofont{Consolas}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{Liberation Mono}}
 \lstset{
     language=Python,
     basicstyle=\footnotesize\ttfamily,
@@ -39,7 +41,7 @@
 }
 % Consolas 仍缺 6 个字符。listings 的 literate 只能匹配码位 $\leq$255，对三字节 UTF-8 无效，
 % 故用 \newunicodechar 兜底（cls 已加载该宏包）。℃ 映射为 $^\circ$C，与正文既有写法一致。
-\newfontfamily\mhsymfont{Segoe UI Symbol}
+\IfFontExistsTF{Segoe UI Symbol}{\newfontfamily\mhsymfont{Segoe UI Symbol}}{\newfontfamily\mhsymfont{Noto Sans Symbols2}}
 \newunicodechar{⇒}{\ensuremath{\Rightarrow}}
 \newunicodechar{∈}{\ensuremath{\in}}
 \newunicodechar{≪}{\ensuremath{\ll}}
@@ -85,6 +87,30 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{4}
+
+% === 页数压缩：不改字号、行距与页边距，只收紧公式/图表/节距 ===
+\makeatletter
+\AtBeginDocument{%
+  \abovedisplayskip 6\p@ \@plus2\p@ \@minus3\p@
+  \belowdisplayskip 6\p@ \@plus2\p@ \@minus3\p@
+  \abovedisplayshortskip \z@ \@plus2\p@
+  \belowdisplayshortskip 3\p@ \@plus2\p@ \@minus2\p@
+}
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+ 	{-2.6ex \@plus -0.8ex \@minus -.2ex}%
+	{1.4ex \@plus.2ex}%
+	{\centering\normalfont\Large\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+	{-2.2ex\@plus -0.8ex \@minus -.2ex}%
+	{0.9ex \@plus .2ex}%
+	{\normalfont\large\bfseries}}
+\makeatother
+\setlength{\textfloatsep}{8pt plus 2pt minus 3pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 3pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+\captionsetup{skip=4pt}
 \begin{document}
 
 \maketitle
@@ -149,14 +175,16 @@ $\chi=0$ 替代闭合为 $52.6476$~h，两者相差 $1.5607$~h（$3.0550\%$）�
 
 % === 参考文献 ===
 \bibliographystyle{gbt7714-numerical}
-% === AI 工具使用声明（自动插入）===
-\clearpage
+\setlength{\bibsep}{3pt plus 1pt minus 1pt}
+% AI 声明紧接正文，不单独清页；参考文献计入正文页数。
 \input{sections/Z_ai_disclosure}
 \bibliography{references}
 \label{mh:body-end}
 
-% === 附录 ===
+% === 附录（不计入正文+参考文献页数）===
+\clearpage
 \begin{appendices}
+\input{sections/A_figures}
 \input{sections/A_code}
 \end{appendices}
 

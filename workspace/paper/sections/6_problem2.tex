@@ -12,7 +12,7 @@ $3$~h 只是报表窗口：沿用正式配置，同一次求解一直推进到�
 按题目要求的时刻与位置整理，见表~\ref{tab:p2_T} 与表~\ref{tab:p2_C}。
 
 \begin{table}[H]
-\centering
+\centering\small\renewcommand{\arraystretch}{1.15}
 \caption{全过程模型下药材内部温度（$^\circ$C）}\label{tab:p2_T}
 \begin{tabular}{cccccc}
 \toprule
@@ -29,7 +29,7 @@ $3$~h 只是报表窗口：沿用正式配置，同一次求解一直推进到�
 \end{table}
 
 \begin{table}[H]
-\centering
+\centering\small\renewcommand{\arraystretch}{1.15}
 \caption{全过程模型下药材内部水分浓度（kg/kg）}\label{tab:p2_C}
 \begin{tabular}{cccccc}
 \toprule
@@ -53,18 +53,13 @@ $3$~h 只是报表窗口：沿用正式配置，同一次求解一直推进到�
 而是水分从芯部迁移到表面的内部阻力。这也解释了题目所述烘干需持续两三天的量级。
 
 与问题一相比，中心含水率在 $3$~h 内下降了 $0.78$~kg/kg，而问题一在 $0.5$~h 内
-几乎未动。本问剖面与同一时刻的两问增量对照合见图~\ref{fig:q2_profiles}
-与图~\ref{fig:q12_contrast}。
+几乎未动。本问剖面见图~\ref{fig:q2_profiles}；同一时刻两问增量对照见图~\ref{fig:q12_contrast}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.86\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q2_profiles.pdf}
+  \includegraphics[width=0.86\textwidth,height=0.32\textheight,keepaspectratio]{../figures/fig_q2_profiles.pdf}
   \caption{问题二温度与含水率的径向剖面}
   \label{fig:q2_profiles}
-  \vspace{0.5em}
-  \includegraphics[width=0.86\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q12_contrast.pdf}
-  \caption{问题一与问题二在 $t=1800$~s 的增量对比}
-  \label{fig:q12_contrast}
 \end{figure}
 
 图~\ref{fig:q2_profiles} 中温度剖面约 $2$~h 后趋于平坦，含水率由表层弯折转为整体倾斜。
