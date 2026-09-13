@@ -1,8 +1,10 @@
 """有限体积内核（柱坐标控制体 + 全隐式后向 Euler，MODELING_REPORT §6.1、§7.5）。
 
-统一在归一化坐标 ξ=r/R(t)∈[0,1] 上离散：
-- 固定域（问题1/2/3）：R≡R0 常值、Rdot=0，退化为物理坐标（×R^2 后逐点等价，见 K18/U5）；
-- 移动边界（问题4）：R(t)、Rdot(t) 由附件2 给出，含 (1-χ)·ξ·Rdot/R·∂ξφ 对流项。
+两套坐标共用同一隐式有限体积核：
+- Landau ξ=r/R(t)∈[0,1]（问题1/2/3 与问题4 Eulerian 交叉验证）：
+  固定域 R≡R0、Rdot=0 退化为物理坐标；移动边界含 (1-χ)·ξ·Rdot/R·∂ξφ 对流项。
+- Lagrangian 干基坐标 s=∫ ρ_d r dr（问题4 主用）：域 [0,S] 固定，收缩进入 r(s,t)² 几何因子，
+  无对流项，干物质由坐标本身守恒。
 
 界面输运系数取相邻节点平均（口径 FACE_MODE，交付用算术平均 §6.1；调和 §13.4 供对照）；
 界面通量以 2π·ξ_{i±1/2}·Γ 面积权重体现 1/r 因子。
@@ -142,6 +144,69 @@ def step_implicit(phi_old, cap, G, beta, phi_air, R, Rdot, chi, dt, xi, dxi, Vt,
                         + np.sum(lo_adv[1:] * phi_new[:-1])
                         + np.sum(up_adv[:-1] * phi_new[1:]))
     resid_abs = abs(stored - qsurf + adv_net)
+    return phi_new, resid_abs
+
+
+def make_s_grid(N, S_tot=1.0):
+    """归一化干基/物质坐标 η=(r/R(t))² ∈[0,1] 的顶点网格。
+
+    均匀 Δη 对应物理半径 r=R√η，表面更密。S_tot 默认 1（归一化）。
+    """
+    ds = float(S_tot) / N
+    s = np.linspace(0.0, float(S_tot), N + 1)
+    Vt = np.empty(N + 1)
+    Vt[0] = 0.5 * ds
+    Vt[1:N] = ds
+    Vt[N] = 0.5 * ds
+    return s, ds, Vt
+
+
+def affine_radius(s, S_tot, R):
+    """均匀收缩：r(η,t)=R(t)·√(η/S)，η 为物质坐标。"""
+    ratio = np.clip(s / max(float(S_tot), 1e-30), 0.0, 1.0)
+    return float(R) * np.sqrt(ratio)
+
+
+def step_lagrange(phi_old, cap, Gcoef, R, dt, ds, Vt, s, sfc, phi_air,
+                  return_diag=False, src=None):
+    """物质坐标 η=(r/R)²∈[0,1] 上经验 Fick/Fourier 方程的全隐式有限体积步。
+
+    与 Eulerian Landau χ=1（仿射骨架、无表观对流）同一连续方程，仅网格按 η 均匀：
+        cap ∂φ/∂t = (4/R²) ∂/∂η (η Γ ∂φ/∂η)
+    水分 cap=1、Γ=D；温度 cap=ρ c_p、Γ=k。
+    表面 Robin 化为 η-通量：sfc = 2β/R（β=h 或 h_m）。
+    """
+    N = phi_old.size - 1
+    Gf = face_mean(Gcoef)
+    s_face = 0.5 * (s[:-1] + s[1:])
+    R2 = max(float(R) * float(R), 1e-30)
+    aE = (4.0 / R2) * s_face * Gf / ds
+
+    di = cap * Vt / dt
+    lo = np.zeros(N + 1)
+    up = np.zeros(N + 1)
+    di[0:N] += aE
+    up[0:N] += -aE
+    di[1:N + 1] += aE
+    lo[1:N + 1] += -aE
+
+    rhs = (cap * Vt / dt) * phi_old
+    di[N] += sfc
+    rhs[N] += sfc * phi_air
+    if src is not None:
+        rhs = rhs + src
+
+    ab = np.zeros((3, N + 1))
+    ab[0, 1:] = up[0:N]
+    ab[1, :] = di
+    ab[2, :-1] = lo[1:N + 1]
+    phi_new = solve_banded((1, 1), ab, rhs)
+
+    if not return_diag:
+        return phi_new
+    stored = float(np.sum(cap * Vt * (phi_new - phi_old)) / dt)
+    qsurf = float(sfc * (phi_air - phi_new[N]))
+    resid_abs = abs(stored - qsurf)
     return phi_new, resid_abs
 
 

@@ -1,13 +1,12 @@
 """四问统一时间推进引擎（MODELING_REPORT §6.2、§7.5、§11）。
 
-单一 run(cfg) 覆盖问题1/2/3/4 与效应隔离情景 S0–S4、灵敏度扰动：
+单一 run(cfg) 覆盖问题1/2/3/4、2×2 因子设计与灵敏度扰动：
 - 每步严格保序算子分裂（①ρ,cp,k → ②解 T^{n+1} → ③用 T^{n+1} 算 D → ④解 C^{n+1}
-  → ⑤C 下限 → ⑥Picard 复核），顺序不可交换（§11、§13.4 MC4）；
-- 分段步长（问题1 Δt=1s；问题2/3/4 Δt=2s→4s@14400s），跨输出时刻截断步长精确命中（§13.3）；
-- 终止事件按逐点最大值首次 <C_th，式(19) 亚步线性插值定位 t_end（§6.4、K11）；
-- 移动边界经 ξ 网格 + 1/R² + 对流项（χ=0）统一处理，固定域退化为 Rdot=0（K18/U5）；
-- 快照按输出网格记录，节点场插值到固定 r 列，问题4 对 r>R(t) 置空、末列取 ξ=1（§7.7、式(26)）。
-⛔ 不使用 solve_ivp（§11）；界面调和平均（MC2）；下限 1e-3≪0.15（§6.2）。
+  → ⑤C 下限 → ⑥Picard 复核），顺序不可交换；
+- 分段步长（问题1 Δt=1s；问题2/3/4 Δt=2s→4s@14400s），跨输出时刻截断步长精确命中；
+- 终止事件按逐点最大值首次 <C_th，亚步线性插值定位 t_end；
+- frame='landau'：ξ 网格 + 1/R² + 对流项（χ=0/1）；frame='lagrange'：干基坐标 s，无对流项；
+- 快照按输出网格记录，节点场插值到固定 r 列，问题4 对 r>R(t) 置空、末列取表面。
 """
 from __future__ import annotations
 
@@ -27,7 +26,8 @@ class CaseConfig:
     name: str
     appendix: int                 # 物性附录 2/3/4
     geom: object                  # FixedGeometry 或 MovingGeometry
-    chi: int = P.CHI_PRIMARY      # 骨架闭合开关（0 主用 / 1 仿射）
+    chi: int = P.CHI_PRIMARY      # Landau 骨架闭合（0 含对流 / 1 仿射）；Lagrangian 下忽略
+    frame: str = "landau"         # 'landau' | 'lagrange'
     N: int = P.N_CV               # 控制体数
     dt_policy: str = "seg"        # 'p1'(=1s) | 'seg'(2s→4s) | 'const'
     dt_const: float = P.DT_SEG_FINE
@@ -54,10 +54,13 @@ class CaseConfig:
         return P.DT_SEG_FINE if t < P.DT_SWITCH_S else P.DT_SEG_COARSE
 
 
-def _interp_cols(phi_nodes, R, cols_m):
-    """节点场（ξ 均布）插值到固定物理半径列 cols_m；r>R(t) 置 NaN（§7.7 式26）。"""
-    n = phi_nodes.size - 1
-    r_nodes = np.linspace(0.0, R, n + 1)
+def _interp_cols(phi_nodes, R, cols_m, r_nodes=None):
+    """节点场插值到固定物理半径列 cols_m；r>R(t) 置 NaN。
+
+    r_nodes 默认按 Landau 均匀 ξ（物理半径均匀）；Lagrangian 传入 r=R√(s/S)。
+    """
+    if r_nodes is None:
+        r_nodes = np.linspace(0.0, R, phi_nodes.size)
     out = np.interp(cols_m, r_nodes, phi_nodes)
     out = np.where(cols_m > R + 1e-12, np.nan, out)
     return out
@@ -86,9 +89,17 @@ def run(cfg: CaseConfig):
     amb = cfg.ambient if cfg.ambient is not None else AMB.Ambient(
         t_plateau=cfg.t_plateau, c_plateau=cfg.c_plateau)
 
-    xi, dxi, Vt = fvm.make_grid(cfg.N)
     N = cfg.N
     cols_m = np.asarray(P.DIST_COLS_CM, dtype=float) * P.CM_TO_M   # 21 固定列 (m)
+    R0 = float(cfg.geom.R(0.0))
+    use_lag = cfg.frame == "lagrange"
+    S0 = None
+    s = ds = xi = dxi = None
+    if use_lag:
+        S0 = 1.0
+        s, ds, Vt = fvm.make_s_grid(N, S0)
+    else:
+        xi, dxi, Vt = fvm.make_grid(N)
 
     # Robin 系数：SA6 Dirichlet 以大 β 实现（U2/§9.5）
     big = 1.0e9
@@ -121,10 +132,16 @@ def run(cfg: CaseConfig):
     snap_nodesC = [] if cfg.store_nodes else None
     snap_nodesT = [] if cfg.store_nodes else None
 
+    def _r_nodes(Rn):
+        if use_lag:
+            return fvm.affine_radius(s, S0, Rn)
+        return np.linspace(0.0, Rn, N + 1)
+
     def record(t_now, Tf, Cf, Rn):
+        rn = _r_nodes(Rn)
         snap_t.append(t_now)
-        snap_Tcol.append(_interp_cols(Tf, Rn, cols_m))
-        snap_Ccol.append(_interp_cols(Cf, Rn, cols_m))
+        snap_Tcol.append(_interp_cols(Tf, Rn, cols_m, r_nodes=rn))
+        snap_Ccol.append(_interp_cols(Cf, Rn, cols_m, r_nodes=rn))
         snap_Tsurf.append(float(Tf[N]))
         snap_Csurf.append(float(Cf[N]))
         snap_maxC.append(float(np.max(Cf)))
@@ -135,7 +152,6 @@ def run(cfg: CaseConfig):
             snap_nodesC.append(Cf.copy())
             snap_nodesT.append(Tf.copy())
 
-    R0 = float(cfg.geom.R(0.0))
     C0_tot = float(np.sum(Vt * C))
     record(0.0, T, C, R0)
 
@@ -164,26 +180,38 @@ def run(cfg: CaseConfig):
         Tair = float(amb.T_air(t_new))
         Cair = float(amb.C_air(t_new))
 
-        # ---- 保序算子分裂 + Picard（§11 步 1–6）----
+        # ---- 保序算子分裂 + Picard ----
         T_it = T.copy()
         C_it = C.copy()
-        dC_lag = np.zeros(N + 1)            # 潜热汇滞后项（SA8）
+        dC_lag = np.zeros(N + 1)
         n_it = 0
         for m in range(P.PICARD_MAX):
             n_it = m + 1
             rho, cp, k, _ = PR.props(cfg.appendix, C_it, T_it)
-            capT = rho * cp
+            rho_d = PR.rho_s_eff(cfg.appendix, C_it)
             srcT = None
             if cfg.latent_heat > 0.0:
-                # 潜热汇：蒸发吸热 = λ·ρ_s·(−ΔC)/Δt·Ṽ，滞后一次迭代（探查用）
-                srcT = -cfg.latent_heat * PR.rho_s_eff(cfg.appendix, C_it) * (-dC_lag) * Vt / dt
-            T_new = fvm.step_implicit(T, capT, k, beta_T, Tair, Rn, Rdot, cfg.chi,
-                                      dt, xi, dxi, Vt, src=srcT)
-            _, _, _, D = PR.props(cfg.appendix, C_it, T_new)
-            D = np.maximum(D * cfg.D_scale, P.D_FLOOR)
-            capC = np.ones(N + 1)
-            C_new = fvm.step_implicit(C, capC, D, beta_C, Cair, Rn, Rdot, cfg.chi,
-                                      dt, xi, dxi, Vt)
+                srcT = -cfg.latent_heat * rho_d * (-dC_lag) * Vt / dt
+            if use_lag:
+                capT = rho * cp
+                sfc_T = 2.0 * beta_T / Rn
+                T_new = fvm.step_lagrange(T, capT, k, Rn, dt, ds, Vt, s,
+                                          sfc_T, Tair, src=srcT)
+                _, _, _, D = PR.props(cfg.appendix, C_it, T_new)
+                D = np.maximum(D * cfg.D_scale, P.D_FLOOR)
+                sfc_C = 2.0 * beta_C / Rn
+                capC = np.ones(N + 1)
+                C_new = fvm.step_lagrange(C, capC, D, Rn, dt, ds, Vt, s,
+                                          sfc_C, Cair)
+            else:
+                capT = rho * cp
+                T_new = fvm.step_implicit(T, capT, k, beta_T, Tair, Rn, Rdot,
+                                          cfg.chi, dt, xi, dxi, Vt, src=srcT)
+                _, _, _, D = PR.props(cfg.appendix, C_it, T_new)
+                D = np.maximum(D * cfg.D_scale, P.D_FLOOR)
+                capC = np.ones(N + 1)
+                C_new = fvm.step_implicit(C, capC, D, beta_C, Cair, Rn, Rdot,
+                                          cfg.chi, dt, xi, dxi, Vt)
             dT_it = float(np.max(np.abs(T_new - T_it)))
             dC_it = float(np.max(np.abs(C_new - C_it)))
             dC_lag = C_new - C
@@ -194,16 +222,20 @@ def run(cfg: CaseConfig):
             picard_nonconv += 1
         picard_iters_max = max(picard_iters_max, n_it)
 
-        # 步 5：浓度下限保护（§6.2；记录截断步数）
         below = C_it < P.C_FLOOR
         if np.any(below):
             floor_trunc_steps += 1
             C_it = np.maximum(C_it, P.C_FLOOR)
 
-        # 全局质量收支（ξ 度量，式27 分子逐步累加）
-        sfc = 2.0 * np.pi * beta_C / Rn
-        flux = sfc * (Cair - C_it[N])                    # 表面净流入速率
-        adv = _adv_net_mass(C_it, xi, Rdot, Rn, dxi, Vt, cfg.chi)
+        # 离散水分方程收支残差（Lagrangian：∫C ds 即干基水质量；Landau：ξ 测度）
+        if use_lag:
+            sfc = 2.0 * beta_C / Rn
+            flux = sfc * (Cair - C_it[N])
+            adv = 0.0
+        else:
+            sfc = 2.0 * np.pi * beta_C / Rn
+            flux = sfc * (Cair - C_it[N])
+            adv = _adv_net_mass(C_it, xi, Rdot, Rn, dxi, Vt, cfg.chi)
         stored_rate = float(np.sum(Vt * (C_it - C)) / dt)
         resid_step_max = max(resid_step_max, abs(stored_rate - flux + adv))
         mass_bal_abs += (float(np.sum(Vt * (C_it - C))) - flux * dt + adv * dt)
@@ -232,6 +264,8 @@ def run(cfg: CaseConfig):
         "name": cfg.name,
         "appendix": cfg.appendix,
         "chi": cfg.chi,
+        "frame": cfg.frame,
+        "S0": S0,
         "N": N,
         "dt_policy": cfg.dt_policy,
         "save_dt_s": cfg.save_dt_s,

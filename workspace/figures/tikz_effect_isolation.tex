@@ -1,86 +1,42 @@
-% 图契约（tikz_effect_isolation）
-%   purpose: 交代问题 4 相对问题 3 的两因素分解路径，说明为何不能对净差做单一归因
-%   topology: causal（两因素二乘二格局 + 分解恒等式，单幅连续示意）
-%   node_roles: 情景框（实线）/ 对照情景（双线框，非交付）/ 注记（无框文字）
-%   edge_roles: 单因素改变（实心箭头）/ 闭合替代（双向箭头）/ 界限参照（虚线）
-%   style_family: C1 因果（辅以 P1 对照：交付与非交付情景的区分）
-%   annotation_policy: 情景框内只写「改了什么」，分解恒等式单独成行
-%   result_policy: symbolic（只出现符号差与方向，不出现任何小时数值）
-%   final_width: 13.2cm 设计宽度，论文按 0.95\textwidth 插入
-%   print_mode: 纯黑白线稿，线型与双线边框承担语义，不依赖颜色
+% 图契约（tikz_effect_isolation）：2×2 因子设计
 \documentclass[border=4pt]{standalone}
-% 本机 MiKTeX 的 expl3 为 2024-01-04，低于 ctex/xeCJK 的下限；fontspec 可用，
-% 故直接绑定宋体，中文换行全部用显式 \\ 控制（不依赖 CJK 自动断行）。
 \usepackage{fontspec}
 \setmainfont{SimSun}
 \usepackage{amsmath}
 \usepackage{tikz}
+\usepackage{adjustbox}
 \usetikzlibrary{arrows.meta,positioning,calc}
 
 \tikzset{
-  % 语义令牌：交付情景单线框，非交付对照双线框，界限参照虚线框
-  scenario/.style = {draw=black, line width=0.9pt, align=left,
-                     inner sep=6pt},
-  control/.style  = {draw=black, line width=0.9pt, double, double distance=1.6pt,
-                     align=left, inner sep=6pt},
-  bound/.style    = {draw=black, line width=0.7pt, dashed, align=left,
-                     inner sep=6pt},
-  effect/.style   = {draw=black, line width=1.1pt, -{Latex[length=2.8mm]}},
-  closure/.style  = {draw=black, line width=0.8pt,
-                     {Latex[length=2.2mm]}-{Latex[length=2.2mm]}},
-  refline/.style  = {draw=black, line width=0.6pt, dashed,
-                     -{Latex[length=2.2mm]}},
+  scenario/.style = {draw=black, line width=0.9pt, align=center,
+                     inner sep=6pt, text width=3.8cm, minimum height=1.7cm},
+  control/.style  = {draw=black, line width=0.9pt, double, double distance=1.4pt,
+                     align=center, inner sep=6pt, text width=3.8cm, minimum height=1.7cm},
+  effect/.style   = {draw=black, line width=1.0pt, -{Latex[length=2.6mm]}},
 }
 
 \begin{document}
 \adjustbox{max width=\textwidth}{%
 \begin{tikzpicture}[font=\small]
 
-  % ================= 两因素二乘二格局 =================
-  \node[scenario, text width=3.6cm, minimum width=4.2cm] at (0,3.6)
-       {\textbf{S0}\ 问题 3 基线\\[2pt] 附录 3 物性\\ 固定域 $R$ 为常数};
+  \node[scenario] (t00) at (0,3.2) {\textbf{$t_{00}$}\\附录 3，固定半径\\问题三同类基线};
+  \node[control]  (t10) at (6.6,3.2) {\textbf{$t_{10}$}\\附录 4，固定半径\\对照，不交付};
+  \node[scenario] (t01) at (0,0.0) {\textbf{$t_{01}$}\\附录 3，收缩 $R(t)$\\补齐的第四格};
+  \node[scenario] (t11) at (6.6,0.0) {\textbf{$t_{11}$}\\附录 4，收缩 $R(t)$\\问题四交付};
 
-  \node[control, text width=3.6cm, minimum width=4.2cm] at (6.8,3.6)
-       {\textbf{S1}\ 单换物性\\[2pt] 附录 4 物性\\ 仍取固定域\\[2pt] 对照，不交付};
+  \draw[effect] (t00) -- (t10);
+  \node[anchor=south] at (3.3,3.45) {换物性};
+  \draw[effect] (t00) -- (t01);
+  \node[anchor=east] at (-0.15,1.6) {加收缩};
+  \draw[effect] (t10) -- (t11);
+  \node[anchor=west] at (6.75,1.6) {加收缩};
+  \draw[effect] (t01) -- (t11);
+  \node[anchor=north] at (3.3,-0.25) {换物性};
 
-  \node[scenario, text width=3.6cm, minimum width=4.2cm] at (6.8,-0.6)
-       {\textbf{S2}\ 问题 4 主用\\[2pt] 附录 4 物性\\ 收缩域含对流项};
-
-  \node[scenario, text width=3.6cm, minimum width=4.2cm] at (0,-0.6)
-       {\textbf{S3}\ 替代闭合\\[2pt] 附录 4 物性\\ 收缩域仿射骨架};
-
-  % 单因素改变：每步只动一件事
-  \draw[effect] (2.15,3.6) -- (4.60,3.6);
-  \node[anchor=south, minimum width=2.0cm] at (3.38,3.82) {只换物性};
-
-  \draw[effect] (6.8,2.45) -- (6.8,0.65);
-  \node[anchor=west, minimum width=2.0cm] at (6.95,1.55) {再加收缩};
-
-  % 闭合替代：同一物理情景的两种骨架运动学闭合
-  \draw[closure] (4.60,-0.6) -- (2.15,-0.6);
-  \node[anchor=north, minimum width=2.6cm] at (3.38,-0.85) {闭合不确定度};
-
-  % ================= 界限参照：置于恒等式右侧，压住整图设计宽度 =================
-  \node[bound, text width=3.6cm, minimum width=4.2cm] at (11.2,-3.2)
-       {\textbf{S4}\ 末态半径界\\[2pt] 附录 4 物性\\ 固定取末态细半径};
-
-  \draw[refline] (11.2,-2.05) -- (11.2,-1.15);
-  \node[align=left, text width=4.0cm, minimum width=4.4cm] at (11.4,-0.6)
-       {下界参照：主用情景\\ 应落在 S4 与 S1 之间};
-
-  % ================= 分解恒等式与归因警示 =================
-  % 不用 \underbrace：花括号会被判为与恒等式主行重叠的独立文字行，
-  % 故把两项的效应名改为恒等式下方的对应说明行。
-  \node[align=left, text width=8.8cm, minimum width=9.2cm] at (3.4,-3.2)
-       {两因素的加和恒等（以 S2 为主用）\\[4pt]
-        $t_{\mathrm{S2}}-t_{\mathrm{S0}}
-         =(t_{\mathrm{S1}}-t_{\mathrm{S0}})+(t_{\mathrm{S2}}-t_{\mathrm{S1}})$\\[3pt]
-        右端第一项为换物性效应，第二项为加收缩效应};
-
-  \node[align=left, text width=8.8cm, minimum width=9.2cm] at (3.4,-5.6)
-       {两项符号相反且量级远大于净差，\\
-        故净差不可单独归因于收缩；\\
-        S1 为人为构造的对照，不参与任何交付结论};
+  \node[align=left, text width=12.2cm] at (3.3,-2.15)
+       {交互项 $I=t_{11}-t_{10}-t_{01}+t_{00}$。\\
+        两条路径一般不相等；单一贡献取 Shapley 平均，\\
+        不加性恒等残差不能证明分解唯一。};
 
 \end{tikzpicture}
 }%

@@ -1,63 +1,21 @@
 {
   "problem": 4,
   "summary": {
-    "problem": 4,
-    "appendix": 4,
-    "N": 40,
-    "dt_s": "seg(2→4)",
-    "chi_primary": 0,
-    "t_end_h": 52.18956526252852,
-    "t_end_s": 187882.43494510266,
-    "t_end_label": "S2 χ=0, N=40, Δt=seg(2→4)s → t_end=52.190 h",
-    "maxC_at_end": 0.15001165810064376,
-    "radius_frozen": false,
-    "R_at_end_cm": 1.2,
-    "mass_resid_rel": 7.514545965839919e-16,
-    "picard_iters_max": 3,
-    "picard_nonconv": 0,
-    "floor_trunc_steps": 0,
-    "effect_isolation": {
-      "t_S0_h": 56.70869204176537,
-      "t_S1_h": 128.59370950394927,
-      "t_S2_h": 52.18956526252852,
-      "t_S3_h": 50.693953050922325,
-      "t_S4_h": 47.41461898212963,
-      "prop_swap_h": 71.8850174621839,
-      "shrink_h": -76.40414424142075,
-      "net_h": -4.519126779236849,
-      "identity_lhs": -4.519126779236849,
-      "identity_rhs": -4.519126779236856,
-      "identity_resid_h": 7.105427357601002e-15
+    "t_end_h": 50.78028378716023,
+    "frame_primary": "lagrange",
+    "crosscheck": {
+      "euler_chi0_h": 52.1896,
+      "diff_rel": 0.02775
     },
-    "chi_closure": {
-      "S2_chi0_h": 52.18956526252852,
-      "S3_chi1_h": 50.693953050922325,
-      "diff_h": -1.4956122116061934,
-      "diff_rel": -0.028657303506607768
-    },
-    "inc1": {
-      "ratio_actual": 2.4130984027945606,
-      "ratio_required": 2.7870602367328963,
-      "rel_diff": 0.13417787997890882,
-      "R_consistent_cm": 1.2874858941794518,
-      "R_measured_end_cm": 1.198
-    },
-    "report_times_h": [
-      6.0,
-      12.0,
-      18.0,
-      24.0,
-      30.0,
-      36.0,
-      42.0,
-      48.0
-    ],
-    "report_radii_cm": [
-      0.0,
-      0.5,
-      1.0,
-      1.5,
-      2.0
-    ]
+    "lagrange_2x2": {
+      "t00": 56.974,
+      "t10": 128.9063,
+      "t01": 25.0882,
+      "t11": 50.7803,
+      "interaction_h": -46.2401,
+      "prop_shapley_h": 48.8122,
+      "shrink_shapley_h": -55.0059,
+      "net_h": -6.1937
+    }
   }
 }

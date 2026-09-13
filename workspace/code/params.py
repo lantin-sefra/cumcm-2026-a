@@ -111,8 +111,10 @@ LATENT_HEAT_PROBE = 2.4 * 10.0 ** 6   # SA8 探查值
 N_CV = 40                      # 交付控制体数
 C_FLOOR = 1.0 * 10.0 ** (-3)   # 浓度下限保护（§11 第5步，≪ C_TH）
 D_FLOOR = 1.0 * 10.0 ** (-14)  # D 数值下限（§13.3 异常预案）
-CHI_PRIMARY = 0                # 主用骨架闭合（LAB_STATIC + Landau 对流项）
-CHI_ALT = 1                    # 替代闭合（仿射骨架）
+CHI_PRIMARY = 0                # Eulerian Landau 交叉验证：保留完整表观对流项
+CHI_ALT = 1                    # Eulerian Landau：仿射骨架使对流项抵消（≡ 均匀收缩 Lagrangian）
+FRAME_PRIMARY = "lagrange"     # 问题4 主用：Lagrangian 干基质量坐标
+FRAME_CROSSCHECK = "landau"    # 问题4 交叉验证：Eulerian Landau ξ=r/R(t)
 
 # 时间步长（s）
 DT_P1 = 1.0                    # 问题1

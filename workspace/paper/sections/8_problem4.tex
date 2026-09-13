@@ -1,4 +1,4 @@
-\section{问题四：收缩移动边界模型与收缩效应的定量隔离}
+\section{问题四：收缩移动边界的物质坐标模型}
 
 \subsection{相对问题三的两处改动}
 
@@ -7,116 +7,70 @@
 式~\eqref{eq:interp} 保持不变，边界条件式~\eqref{eq:bc_surface} 的形式不变但作用位置随
 $R(t)$ 移动。两处改动中，物性只是系数替换，域的变化才是本质困难。
 
-困难在于网格结点的物理位置不再固定。若直接在物理坐标上离散，每个时间步都要重新生成网格
-并把上一步的解插值到新结点上，插值既破坏离散守恒，又使误差来源难以区分，
-无法判断结果偏差究竟来自物理机制还是来自反复插值。因此本文采用坐标变换把动域化为定域。
+干基含水率 $C$ 以干物质质量为基准。药材收缩时，固体骨架携带结合水一起向内运动，
+因此 $C$ 首先是物质点上的场，而不是实验室固定半径上的场。若仍在随时间缩小的物理网格上
+离散，每步都要重新生成结点并把旧解插值过来，插值既破坏离散守恒，又使误差来源难以区分。
+坐标变换的目的，就是把物质点变成固定的计算坐标。
 
-\subsection{归一化坐标下的控制方程}
+\subsection{物质坐标与归一化坐标}
 
-引入归一化径向坐标
-
-\begin{equation}\label{eq:landau}
-\xi=\frac{r}{R(t)}\in[0,1],
+定义归一化物质坐标
+\begin{equation}\label{eq:eta}
+\eta=\bigl(r/R(t)\bigr)^2\in[0,1].
 \end{equation}
-
-式~\eqref{eq:landau} 把随时间收缩的物理域映成端点恒为 $0$ 与 $1$ 的固定计算域，
-这一处理是收缩干燥建模的通行做法\upcite{Misra1980,Bennamoun2013}。
-代价体现在时间导数上：定 $\xi$ 求导与定 $r$ 求导并不相同，两者相差一项
-
-\begin{equation}\label{eq:chain}
-\left.\frac{\partial \varphi}{\partial t}\right|_{r}
-=\left.\frac{\partial \varphi}{\partial t}\right|_{\xi}
--\frac{\xi\,\dot R(t)}{R(t)}\,\frac{\partial \varphi}{\partial \xi},
+均匀收缩假设下，固相速度为仿射场
+\begin{equation}\label{eq:vs}
+v_s(r,t)=r\,\dot R(t)/R(t),
 \end{equation}
-
-其中 $\varphi$ 泛指 $T$ 或 $C$、$\dot R=\mathrm{d}R/\mathrm{d}t\le0$。
-把式~\eqref{eq:chain} 代入式~\eqref{eq:energy} 与式~\eqref{eq:moisture}，得到计算域上的方程
-
-\begin{equation}\label{eq:landau_T}
-\rho c_p\frac{\partial T}{\partial t}
-=\frac{1}{R^2}\frac{1}{\xi}\frac{\partial}{\partial \xi}\!\left(\xi\,k\,\frac{\partial T}{\partial \xi}\right)
-+(1-\chi)\,\rho c_p\,\frac{\xi\dot R}{R}\,\frac{\partial T}{\partial \xi},
-\end{equation}
-
-\begin{equation}\label{eq:landau_C}
+它是使 $\eta$ 对每个干物质质点保持不变的唯一径向速度，也使全局干物质
+$S=\bar\rho_d(t)R(t)^2/2$ 在 $\bar\rho_d\propto R^{-2}$ 时守恒。
+在定 $\eta$ 的物质导数下，前三问同一套经验扩散方程变为
+\begin{equation}\label{eq:lagrange_C}
 \frac{\partial C}{\partial t}
-=\frac{1}{R^2}\frac{1}{\xi}\frac{\partial}{\partial \xi}\!\left(\xi\,D\,\frac{\partial C}{\partial \xi}\right)
-+(1-\chi)\,\frac{\xi\dot R}{R}\,\frac{\partial C}{\partial \xi},
+=\frac{4}{R(t)^2}\frac{\partial}{\partial\eta}\!\left(\eta\,D(C,T)\frac{\partial C}{\partial\eta}\right),
 \end{equation}
-
-表面边界条件相应变为
-
-\begin{equation}\label{eq:landau_bc}
-\left.-\frac{k}{R}\frac{\partial T}{\partial \xi}\right|_{\xi=1}=h\bigl[T(1,t)-T_{\rm air}\bigr],
-\qquad
-\left.-\frac{D}{R}\frac{\partial C}{\partial \xi}\right|_{\xi=1}=h_m\bigl[C(1,t)-C_{\rm air}\bigr].
+能量方程同理，只把 $D$ 换成 $k$、左端乘 $\rho c_p$。收缩进入系数 $4/R^2$：半径缩小使同一
+无量纲梯度对应更陡的物理梯度，扩散路径变短。方程中不再出现表观对流项，也无需再引入
+开关参数 $\chi$。表面边界条件化为
+\begin{equation}\label{eq:lagrange_bc}
+\left.-\frac{2D}{R}\frac{\partial C}{\partial\eta}\right|_{\eta=1}=h_m\bigl[C(1,t)-C_{\rm air}\bigr],
 \end{equation}
+温度侧把 $D,h_m$ 换成 $k,h$。
 
-式~\eqref{eq:landau_T} 与式~\eqref{eq:landau_C} 中扩散项前多出 $1/R^2$ 因子，
-它表示同一无量纲梯度在更细的半径上对应更陡的物理梯度——这正是收缩缩短扩散路径的数学体现。
-末项是由边界移动引起的表观对流项，物理上并非真实流动，而是坐标随时间变形的结果。
-式~\eqref{eq:landau_bc} 中的 $1/R$ 同样来自坐标变换，它使表面通量随半径缩小而增强。
-
-\subsection{骨架运动学的闭合与不确定度}
-
-式~\eqref{eq:landau_T}--\eqref{eq:landau_C} 中的 $\chi$ 是一个必须交代的建模选择。
-物理上的问题是：药材收缩时，内部的干物质骨架是否随边界一起向内移动。
-若骨架在实验室参考系中基本不动、只是外层塌缩，则物质点不随坐标变形迁移，
-表观对流项应完整保留，对应 $\chi=0$；若整个骨架按仿射方式同步内缩，
-则物质点与计算坐标同步移动，该项被抵消，对应 $\chi=1$。题目未给出骨架位移的观测数据，
-因此无法从题面唯一确定 $\chi$。以收缩为前提反演圆柱体扩散系数的工作同样需要先声明
-骨架变形的参考系，否则所得系数会把变形效应吸收进去\upcite{Rahman2011}。
-
-本文以 $\chi=0$ 为主用闭合，理由是附件 2 的半径数据是对外轮廓的测量，
-不含内部骨架位移信息，而在无进一步证据时保留完整的坐标变形项是更保守的处理。
-同时把 $\chi=1$ 作为替代闭合一并求解，两者之差作为模型不确定度报告，
-而不合并成单一数字掩盖这一选择。图~\ref{fig:landau_map} 给出该变换的几何含义。
+为交叉验证，把同一经验方程写在实验室参考系后再作 Landau 变换 $\xi=r/R(t)$，
+定 $\xi$ 求导与定 $r$ 求导相差 $-\xi\dot R/R\,\partial_\xi C$，计算域上多出一项表观对流。
+该项来自坐标变形而不是真实流动；一阶迎风用以保证对角占优。两种坐标的关系见图~\ref{fig:landau_map}。
+本文以物质坐标~\eqref{eq:lagrange_C} 为交付实现，以 Eulerian Landau（保留对流项）为交叉验证。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_landau_map.pdf}
-  \caption{归一化坐标把收缩物理域映为固定计算域}
+  \includegraphics[width=0.92\textwidth,height=0.72\textheight,keepaspectratio]{../figures/tikz_landau_map.pdf}
+  \caption{收缩物理域经物质坐标与 Landau 坐标映为固定计算域}
   \label{fig:landau_map}
 \end{figure}
 
-图上两排为物理域在相邻两时刻的形态：域端点内移、网格随之压缩、结点物理位置逐步变化；
-下排为计算域，端点与结点间距全程固定，因此可以套用与固定域完全相同的三对角装配。
-表观对流项须用一阶迎风离散：$\dot R<0$ 使对流指向 $\xi$ 减小的方向，迎风侧为较大的 $\xi$。
-表面附近的网格 Péclet 数可超过 $2$，此时中心差分会破坏系数矩阵的对角占优并产生振荡，
-迎风格式虽引入一阶数值扩散，但保证了解的有界性与单调性。
+\subsection{半径时程}
 
-\subsection{半径时程的构造}
-
-式~\eqref{eq:landau_T}--\eqref{eq:landau_C} 需要 $R(t)$ 与 $\dot R(t)$。
-附件 2 给出 $145$ 个半径实测点，全部参与插值。由假设 5 收缩不可逆，先对实测序列作
-累积取最小值处理以保证单调不增，再用保形分段三次插值构造连续曲线，其解析导数即 $\dot R(t)$。
-选择保形插值而非普通三次样条的理由是后者可能在数据点之间产生过冲，
-使 $R(t)$ 局部上升、$\dot R$ 变号，与收缩不可逆矛盾\upcite{Fritsch1980}。
-实测点、插值曲线与由此得到的收缩速率见图~\ref{fig:input_shrinkage}。
+式~\eqref{eq:lagrange_C} 需要 $R(t)$。附件 2 的 $145$ 个半径实测点全部参与插值：先按假设 5
+作累积最小值以保证单调不增，再用保形分段三次插值构造连续曲线\upcite{Fritsch1980}。
+半径由 $2.000$~cm 降至 $1.198$~cm，末态体积约为初始的 $36\%$。单调化前后的最大偏差为
+$2.2\times10^{-16}$~cm，说明实测本身已经单调。$R(t)$ 与 $\dot R(t)$ 见图~\ref{fig:input_shrinkage}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_input_shrinkage.pdf}
+  \includegraphics[width=0.9\textwidth,height=0.72\textheight,keepaspectratio]{../figures/fig_input_shrinkage.pdf}
   \caption{附件 2 收缩半径的实测散点、插值与收缩速率}
   \label{fig:input_shrinkage}
 \end{figure}
 
-半径由 $2.000$~cm 降至 $1.198$~cm，即末态体积约为初始的 $36\%$。单调化前后的最大偏差为
-$2.2\times10^{-16}$~cm，说明实测数据本身已经单调，该处理只是保证插值不引入非单调段。
-右轴的 $\dot R(t)$ 是式~\eqref{eq:landau_C} 表观对流项的直接输入，其绝对值在早期最大，
-预示收缩对干燥的影响主要发生在前期。
-
 \subsection{烘干时长与含水率分布}
 
-以主用闭合 $\chi=0$ 求解，时间步长按时段取 $2$--$4$~s，得到烘干时长
-
+物质坐标下求得烘干时长
 \begin{equation}\label{eq:p4_answer}
-t_{\rm end}=52.190~\mathrm{h}\approx 2.17~\mathrm{d},
+t_{\rm end}=50.780~\mathrm{h}\approx 2.12~\mathrm{d}.
 \end{equation}
-
-该时刻逐点最大含水率为 $0.150012$~kg/kg，末态半径 $R(t_{\rm end})=1.20$~cm。
-由于 $52.190$~h 落在附件 2 数据覆盖范围之内，半径全程由实测插值给出，
-不涉及数据用尽后的外推。各时刻含水率分布见表~\ref{tab:p4_C}。
+该时刻逐点最大含水率为 $0.1500$~kg/kg，末态半径 $R(t_{\rm end})=1.20$~cm，落在附件 2
+数据覆盖之内，不涉及外推。各时刻含水率分布见表~\ref{tab:p4_C}。
 
 \begin{table}[H]
 \centering
@@ -125,153 +79,115 @@ t_{\rm end}=52.190~\mathrm{h}\approx 2.17~\mathrm{d},
 \toprule
 时间 (h) $\backslash$ 距中心距离 (cm) & 0 & 0.5 & 1 & 1.5 & 2 & 药材表面 \\
 \midrule
-6  & 1.9357 & 1.7664 & 1.2442 & --- & --- & 0.5612 \\
-12 & 0.8632 & 0.7675 & 0.4809 & --- & --- & 0.2119 \\
-18 & 0.4548 & 0.4090 & 0.2630 & --- & --- & 0.1011 \\
-24 & 0.3047 & 0.2783 & 0.1886 & --- & --- & 0.0709 \\
-30 & 0.2364 & 0.2182 & 0.1540 & --- & --- & 0.0608 \\
-36 & 0.1987 & 0.1848 & 0.1343 & --- & --- & 0.0565 \\
-42 & 0.1750 & 0.1636 & 0.1216 & --- & --- & 0.0543 \\
-48 & 0.1587 & 0.1490 & 0.1126 & --- & --- & 0.0531 \\
-烘干结束时间 52.190 h & 0.1500 & 0.1412 & 0.1077 & --- & --- & 0.0525 \\
+6  & 1.7165 & 1.5346 & 1.0212 & --- & --- & 0.4215 \\
+12 & 0.7343 & 0.6516 & 0.4068 & --- & --- & 0.1666 \\
+18 & 0.4067 & 0.3668 & 0.2387 & --- & --- & 0.0889 \\
+24 & 0.2838 & 0.2598 & 0.1781 & --- & --- & 0.0671 \\
+30 & 0.2253 & 0.2084 & 0.1485 & --- & --- & 0.0593 \\
+36 & 0.1920 & 0.1789 & 0.1310 & --- & --- & 0.0558 \\
+42 & 0.1705 & 0.1597 & 0.1194 & --- & --- & 0.0539 \\
+48 & 0.1555 & 0.1462 & 0.1111 & --- & --- & 0.0528 \\
+烘干结束时间 50.780 h & 0.1500 & 0.1412 & 0.1079 & --- & --- & 0.0525 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-表中 $1.5$~cm 与 $2$~cm 两列自第一个输出时刻起即为空，这不是缺算而是几何事实：
-$t=6$~h 时半径已收缩至 $1.374$~cm，这两个位置已落在药材之外，不存在含水率可言。
-按题目表格要求，末列单独给出随时间移动的药材表面处的值。
-把本表与表~\ref{tab:p3_C} 对照可以看到，$6$~h 时中心含水率为 $1.9357$~kg/kg，
-明显高于问题三同时刻的 $1.0156$~kg/kg，即前期收缩情形反而干得更慢，
-因为附录 4 的扩散能力更低；但到 $18$~h 两者已接近（$0.4548$ 对 $0.2979$），
-最终本问反而先达标。这一交叉说明两处改动的作用方向相反，必须分离。
-
-收缩域内的场演化见图~\ref{fig:q4_moving_boundary}。
+$t=6$~h 时半径已缩至约 $1.37$~cm，$1.5$~cm 与 $2$~cm 两列自第一个输出时刻起即为空，
+这是几何事实而不是缺算。同一套附录 4 物性、但半径冻结在 $2$~cm 时时长为 $128.906$~h，
+引入收缩后缩短 $60.6\%$：收缩是主效应，不是小扰动。收缩域内的场演化见图~\ref{fig:q4_moving_boundary}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_moving_boundary.pdf}
+  \includegraphics[width=0.9\textwidth,height=0.72\textheight,keepaspectratio]{../figures/fig_q4_moving_boundary.pdf}
   \caption{问题四收缩域内含水率的时空分布与移动边界}
   \label{fig:q4_moving_boundary}
 \end{figure}
 
-图中等高线绘于物理坐标平面，边界外侧不作外推而留空，故色块上缘即真实计算域的边界。
-红线为 $R(t)$，由 $2.000$~cm 收缩至 $1.200$~cm。域的收缩与内部扩散同时进行，
-两者对达标时间的作用方向相反：域缩小使扩散路径变短、有利于干燥，
-而附录 4 的低扩散系数不利于干燥。图中无法直接读出两者各自贡献多少，需要专门设计的对照实验。
+Eulerian Landau 交叉验证给出 $52.190$~h，与物质坐标结果相对相差 $2.78\%$。
+相差来自是否让含水率随骨架一起运动，而不是来自网格重划。本文将
+$[50.78,\,52.19]$~h 作为坐标表述带来的模型区间，交付值取物质坐标的 $50.780$~h。
 
-按阶段分列的剖面见图~\ref{fig:q4_triptych}。
+\subsection{物性与收缩的 $2\times2$ 因子设计}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_triptych.pdf}
-  \caption{问题四含水率剖面的三阶段演化}
-  \label{fig:q4_triptych}
-\end{figure}
-
-三个面板的横轴为物理半径，故每条剖面的右端点即该时刻的表面位置。面板 (a) 的
-$0$--$12$~h 内边界收缩最快而剖面仍然很陡，说明此阶段表面失水快于内部补给；
-面板 (b) 的 $12$--$36$~h 剖面整体下移、形状变化不大；面板 (c) 中剖面趋于平坦并触及阈值线，
-末态半径 $1.200$~cm。剖面右端点的内移轨迹与图~\ref{fig:input_shrinkage} 中的 $\dot R$
-量级一致，即前期收缩快、后期趋缓。
-
-\subsection{收缩效应的定量隔离}
-
-式~\eqref{eq:p4_answer} 比问题三的 $56.706$~h 短 $4.5$~h。但本问同时改变了物性与求解域，
-把这一差值归因于「收缩使干燥加快」是混淆归因。为分离两项作用，
-在完全相同的离散参数、环境驱动与达标判据下构造情景链，每次只改变一个因素。
-情景链的构造方式见图~\ref{fig:effect_isolation}。
+式~\eqref{eq:p4_answer} 比问题三的 $56.706$~h 短 $5.926$~h。但本问同时改了物性与求解域，
+把净差说成「收缩使干燥加快」是混淆归因。在完全相同的离散、环境与判据下补齐四种组合，
+见图~\ref{fig:effect_isolation} 与表~\ref{tab:effect}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_effect_isolation.pdf}
-  \caption{问题四相对问题三的两因素效应隔离路径}
+  \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{../figures/tikz_effect_isolation.pdf}
+  \caption{问题四相对问题三的 $2\times2$ 因子设计}
   \label{fig:effect_isolation}
 \end{figure}
 
-情景 $S_0$ 为问题三基线（附录 3 物性、固定域），$S_1$ 只把物性换成附录 4 而仍保持固定域，
-$S_2$ 在 $S_1$ 之上再引入收缩即本问的交付解。三者之差满足加和恒等式
-
-\begin{equation}\label{eq:decomp}
-\underbrace{t_{S_2}-t_{S_0}}_{\text{净效应}}
-=\underbrace{\bigl(t_{S_1}-t_{S_0}\bigr)}_{\text{换物性}}
-+\underbrace{\bigl(t_{S_2}-t_{S_1}\bigr)}_{\text{加收缩}} .
-\end{equation}
-
-式~\eqref{eq:decomp} 之所以成立是构造使然而非物理定律：三个情景两两之间只差一个因素，
-差值可以逐段相加。此外设 $S_3$ 为替代闭合 $\chi=1$，$S_4$ 为以末态半径 $1.198$~cm
-固定求解的情形，后者给出时长的下界参照。需要特别说明 $S_1$ 的性质：
-它用附录 4 的慢扩散却不允许收缩，物理上并不自洽，是人为构造的对照情景，
-其时长不作为任何交付结论。五个情景的结果列于表~\ref{tab:effect}。
-
 \begin{table}[H]
 \centering
-\caption{效应隔离情景与烘干时长}\label{tab:effect}
+\caption{四种情景的烘干时长（Lagrangian 核）}\label{tab:effect}
 \begin{tabular}{cllc}
 \toprule
 情景 & 物性关系 & 求解域 & $t_{\rm end}$ (h) \\
 \midrule
-$S_0$ & 附录 3 & 固定 $R=2$~cm & 56.709 \\
-$S_1$ & 附录 4 & 固定 $R=2$~cm（对照，非交付） & 128.594 \\
-$S_2$ & 附录 4 & 收缩域，$\chi=0$（交付） & 52.190 \\
-$S_3$ & 附录 4 & 收缩域，$\chi=1$（替代闭合） & 50.694 \\
-$S_4$ & 附录 4 & 固定 $R=1.198$~cm（下界参照） & 47.415 \\
+$t_{00}$ & 附录 3 & 固定 $R=2$~cm & 56.974 \\
+$t_{10}$ & 附录 4 & 固定 $R=2$~cm（对照） & 128.906 \\
+$t_{01}$ & 附录 3 & 收缩 $R(t)$ & 25.088 \\
+$t_{11}$ & 附录 4 & 收缩 $R(t)$（交付） & 50.780 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-按式~\eqref{eq:decomp} 分解：换物性使时长延长 $71.885$~h，引入收缩使时长缩短 $76.404$~h，
-净差为 $-4.519$~h，加性恒等式的残差为 $7.1\times10^{-15}$~h，即分解在数值上是精确的。
-这一结果的意义远超那个 $4.5$~h 的净差本身：两项效应各自的量级都在七十小时以上，
-是净差的十六倍，方向相反而几近抵消。若只看净差就断言「收缩对烘干时长影响不大」，
-恰好得到相反的结论——收缩的影响极大，只是被物性的影响几乎抵消掉了。
-这一分解的量值构成在图~\ref{fig:q4_shrink_effect} 中一目了然。
+非线性系统中，两因素的贡献依赖计算路径。先换物性再加收缩，得
+$+71.932$~h 与 $-78.126$~h；先加收缩再换物性，得 $-31.886$~h 与 $+25.692$~h。
+交互项
+\begin{equation}\label{eq:interaction}
+I=t_{11}-t_{10}-t_{01}+t_{00}=-46.240~\mathrm{h}
+\end{equation}
+与主效应同量级，说明加性分解不是唯一因果分解——这正是 $t\sim R^2/D$ 的乘积结构所预期的。
+若仍需报两个单一贡献，取两条路径的平均（Shapley）
+\begin{equation}\label{eq:shapley}
+\Delta_{\rm prop}=+48.812~\mathrm{h},\qquad
+\Delta_{\rm shrink}=-55.006~\mathrm{h},\qquad
+\Delta_{\rm net}=-6.194~\mathrm{h}.
+\end{equation}
+机器精度下的加和残差只说明算术闭合，不能证明分解可靠，本文不再把它当作验证指标。
+四格时长的对照见图~\ref{fig:q4_shrink_effect}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_shrink_effect.pdf}
-  \caption{问题四的效应隔离与加性分解}
+  \includegraphics[width=0.95\textwidth,height=0.72\textheight,keepaspectratio]{../figures/fig_q4_shrink_effect.pdf}
+  \caption{问题四 $2\times2$ 因子设计与两条路径的贡献}
   \label{fig:q4_shrink_effect}
 \end{figure}
 
-面板 (a) 中 $S_1$ 的柱高最为突出：仅更换物性就把时长由 $56.709$~h 推到 $128.594$~h，
-增加一倍以上，这与图~\ref{fig:property_maps} 中附录 4 扩散系数低约二至五倍的读数相符。
-面板 (b) 把两项贡献并置，可以看出 $-76.404$~h 的收缩贡献与 $+71.885$~h 的物性贡献
-在量级上几乎对称。$S_4$ 的 $47.415$~h 说明若药材从一开始就是末态的细半径，
-时长还会再短约 $4.8$~h，即收缩过程中前期较粗的半径仍然拖慢了整体进程。
+$t_{01}=25.088$~h 说明：若仍用附录 3 的较快扩散、同时又允许收缩，时长会比问题三再短一半以上。
+附录 4 的低扩散把这份加速部分抵消，最终交付值落在 $50.780$~h。Eulerian 四格给出几乎同一
+交互项（$I=-45.468$~h），结论不依赖于坐标选择。
 
-\subsection{闭合方式的不确定度与数据自洽性诊断}
-
-$\chi$ 的取值无法由题面唯一确定，其影响需要如实量化，见图~\ref{fig:chi_closure}。
+物质坐标与 Eulerian 的逐点最大含水率对照见图~\ref{fig:chi_closure}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_chi_closure.pdf}
-  \caption{问题四移动边界闭合方式的不确定度}
+  \includegraphics[width=0.88\textwidth,height=0.72\textheight,keepaspectratio]{../figures/fig_chi_closure.pdf}
+  \caption{物质坐标与 Eulerian Landau 的交叉验证}
   \label{fig:chi_closure}
 \end{figure}
 
-主用闭合给出 $52.190$~h，替代闭合给出 $50.694$~h，相差 $1.496$~h 即 $2.87\%$。
-两条逐点最大含水率曲线在全程几乎重合，仅在末段分开。因此可以判断：
-在本题的收缩速率与扩散系数量级下，骨架运动学的闭合方式属于次要不确定度，
-$52.190$~h 这一结论不会因该选择而改变量级；但报告时应给出
-$[50.69,\,52.19]$~h 这一区间而非单一数字。
+\subsection{收缩律与数据自洽性}
 
-最后需要报告一项题给数据本身的不相容。若干物质在收缩过程中守恒，则干物质表观密度
-$\rho_s=\rho(C)/(1+C)$ 与半径必须满足 $\rho_s(C_{\rm th})/\rho_s(C_0)=(R_0/R_{\rm end})^2$。
-按式~\eqref{eq:prop_app4} 计算左端得 $2.4131$，而附件 2 的实测半径给出右端 $2.7871$，
-两者相差 $13.42\%$；反过来由密度关系反演的末态半径为 $1.2875$~cm，
-实测值为 $1.1980$~cm，相差 $7.47\%$。见图~\ref{fig:q4_mass_consistency}。
+由附件 2 的 $R(t)$ 与干基质量加权平均含水率 $\bar C(t)$ 反演体积收缩系数
+$\beta(t)=\bigl[(R/R_0)^2-1\bigr]/(\bar C-C_0)$。若线性收缩律成立，$\beta$ 应为常数；
+实际 $\beta$ 的均值为 $0.298$、变异系数 $22\%$，线性收缩律不成立。因此本文直接使用实测
+$R(t)$，而不把体积写成 $C$ 的仿射函数。
+
+最后报告题给数据本身的不相容。若干物质守恒，则 $\rho_s(C_{\rm th})/\rho_s(C_0)=(R_0/R_{\rm end})^2$。
+按式~\eqref{eq:prop_app4} 左端为 $2.413$、附件 2 右端为 $2.787$，相差 $13.42\%$；
+由密度反演的末态半径为 $1.287$~cm，实测为 $1.198$~cm。题目要求根据附件 2 确定时长，
+故把实测 $R(t)$ 作为给定移动边界，不相容度只作诊断，既不修正半径，也不当作收敛判据。
+该不一致对时长的影响不能用坐标交叉验证的 $2.78\%$ 去代替，必须另算；本文未把这一项
+并入交付不确定度区间。诊断见图~\ref{fig:q4_mass_consistency}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_q4_mass_consistency.pdf}
+  \includegraphics[width=0.88\textwidth,height=0.72\textheight,keepaspectratio]{../figures/fig_q4_mass_consistency.pdf}
   \caption{附录 4 密度关系与附件 2 收缩数据的干物质自洽性诊断}
   \label{fig:q4_mass_consistency}
 \end{figure}
-
-两个面板给出配对比较与相对差。题目要求「根据附件 2 确定烘干时长」，
-故本文把实测 $R(t)$ 作为给定的移动边界直接使用，上述不相容度只作为题给数据的诊断量报告，
-既不用它修正实测半径，也不把它当作求解的收敛判据。这一处理的代价是模型内部的密度关系与
-几何关系存在约一成的不一致，它会通过热容项影响温度场，但由于本题的限制环节是水分扩散
-而非供热，对烘干时长的影响预计小于闭合方式带来的 $2.87\%$。

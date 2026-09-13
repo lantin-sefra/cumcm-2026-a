@@ -59,12 +59,14 @@ def main():
     print(f"[P3] t_end={s3['t_end_h']:.3f}h maxC@end={s3['maxC_at_end']:.4f} "
           f"mass_resid={s3['mass_resid_rel']:.2e}")
 
-    # ---- 问题4（附录4 + R(t)；S0–S4 效应隔离）----
+    # ---- 问题4（Lagrangian 主用 + Eulerian 交叉验证 + 2×2 因子）----
     r4, s4 = problem4.solve(write=True)
-    ei = s4["effect_isolation"]
-    print(f"[P4] t_end(S2,χ=0)={s4['t_end_h']:.3f}h  net={ei['net_h']:+.3f}h "
-          f"(换物性{ei['prop_swap_h']:+.3f} 加收缩{ei['shrink_h']:+.3f}) "
-          f"χ闭合差={s4['chi_closure']['diff_rel']*100:+.2f}%")
+    L = s4["lagrange_2x2"]
+    cc = s4["crosscheck"]
+    print(f"[P4] t_end(Lagrangian)={s4['t_end_h']:.3f}h  "
+          f"Eulerian={cc['euler_chi0_h']:.3f}h  cross={cc['diff_rel']*100:+.2f}%  "
+          f"Shapley 物性{L['prop_shapley_h']:+.3f} 收缩{L['shrink_shapley_h']:+.3f} "
+          f"I={L['interaction_h']:+.3f}h")
 
     # ---- §9 验证 + §10 灵敏度（复用 P1/P3/P4）----
     validation, probes = validate.run_all(
@@ -84,10 +86,9 @@ def main():
                 {"problem": 4, "summary": s4})
 
     bounds_probes = [
-        {"quantity": "t_end_hours_P4_chi0_primary", "claim": "upper",
+        {"quantity": "t_end_hours_P4_lagrange_primary", "claim": "upper",
          "probe_delta_sign": 0,
-         "note": "§7.4 冻结半径使 t_end 偏上界方向；但 S2 达标 52.19h < 附件2 数据 72h，"
-                 "冻结未触发(radius_frozen=False)，交付 t_end 不受冻结抬升，故探针符号=0(不绑定)"}
+         "note": "交付 t_end 若落在附件2 数据覆盖内则半径冻结未触发"}
     ]
     all_results = {
         "problem": "2026-CUMCM-A-herb-drying",
@@ -95,12 +96,16 @@ def main():
         "headline": {
             "P1_center_C_1800s": s1["center_C_1800"],
             "P3_t_end_h": s3["t_end_h"],
-            "P4_t_end_h_chi0_primary": s4["t_end_h"],
-            "P4_t_end_h_chi1_alt": s4["chi_closure"]["S3_chi1_h"],
-            "P4_chi_closure_uncertainty_rel": s4["chi_closure"]["diff_rel"],
+            "P4_t_end_h_lagrange_primary": s4["t_end_h"],
+            "P4_t_end_h_euler_chi0": cc["euler_chi0_h"],
+            "P4_crosscheck_rel": cc["diff_rel"],
             "effect_isolation_h": {
-                "property_swap": ei["prop_swap_h"], "shrinkage": ei["shrink_h"],
-                "net_P4_minus_P3": ei["net_h"]},
+                "property_shapley": L["prop_shapley_h"],
+                "shrinkage_shapley": L["shrink_shapley_h"],
+                "interaction": L["interaction_h"],
+                "net": L["net_h"],
+                "t00": L["t00"], "t10": L["t10"],
+                "t01": L["t01"], "t11": L["t11"]},
         },
         "validation_all_pass": validation["all_pass"],
         "radius_frozen": validation["radius_frozen"],

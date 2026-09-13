@@ -357,15 +357,15 @@ def sensitivity(base_res_p3):
     t_sa6 = _tend_p3(dirichlet=True)["t_end_h"]
     rows.append(("SA6", "surface_BC", "Dirichlet", t_sa6, None,
                  "假设3 结构性；Dirichlet⇒t_end 偏短；不改交付"))
-    # SA7 χ 闭合（问题4 移动域，N=20 预检口径）
-    m0 = D.run(D.CaseConfig(name="sa7a", appendix=4, geom=geometry.MovingGeometry(),
-               chi=0, N=20, dt_policy="const", dt_const=P.DT_SEG_COARSE,
+    # SA7 坐标表述（问题4 移动域，N=20 预检）：Lagrangian vs Eulerian χ=0
+    mL = D.run(D.CaseConfig(name="sa7L", appendix=4, geom=geometry.MovingGeometry(),
+               frame="lagrange", N=20, dt_policy="const", dt_const=P.DT_SEG_COARSE,
                save_dt_s=P.P34_SAVE_DT_S, t_max_s=P.T_END_MAX_S, detect_end=True))["t_end_h"]
-    m1 = D.run(D.CaseConfig(name="sa7b", appendix=4, geom=geometry.MovingGeometry(),
-               chi=1, N=20, dt_policy="const", dt_const=P.DT_SEG_COARSE,
+    mE = D.run(D.CaseConfig(name="sa7E", appendix=4, geom=geometry.MovingGeometry(),
+               frame="landau", chi=0, N=20, dt_policy="const", dt_const=P.DT_SEG_COARSE,
                save_dt_s=P.P34_SAVE_DT_S, t_max_s=P.T_END_MAX_S, detect_end=True))["t_end_h"]
-    rows.append(("SA7", "chi_closure", "0->1", m1, None,
-                 f"§7.3；χ=1 vs χ=0 差 {m1-m0:+.3f}h（{(m1-m0)/m0*100:+.2f}%）不确定度"))
+    rows.append(("SA7", "coord_frame", "lagrange_vs_landau", mL, None,
+                 f"Lagrangian {mL:.3f}h vs Eulerian {mE:.3f}h，相对差 {(mE-mL)/mL*100:+.2f}%"))
     # SA8 潜热汇（结构性，仅探查）
     t_sa8 = _tend_p3(latent_heat=P.LATENT_HEAT_PROBE)["t_end_h"]
     rows.append(("SA8", "latent_heat_sink", f"{P.LATENT_HEAT_PROBE:.1e}", t_sa8, None,
@@ -444,7 +444,10 @@ def run_all(shared=None):
         "K12_mass_residual": ev["9_1_mass_budget"]["pass"],
         "K13_grid_deviation": ev["9_2_grid_independence"]["pass"],
         "K18_moving_reduces_fixed": ev["9_5_K18_moving_reduces_to_fixed"]["pass"],
-        "K19_additive_identity": bool(s4["effect_isolation"]["identity_resid_h"] < 1e-6),
+        "K19_factorial_2x2": bool(
+            s4.get("lagrange_2x2")
+            and s4["lagrange_2x2"].get("t01") is not None
+            and np.isfinite(s4["lagrange_2x2"]["interaction_h"])),
     }
     all_pass = (all(e.get("pass", True) for e in ev.values())
                 and all(checks.values()))
@@ -457,9 +460,12 @@ def run_all(shared=None):
         "constraints": checks,
         "sensitivity": sa_summary,
         "t_end_summary_h": {
-            "P3_S0": r3["t_end_h"], "P4_S2_chi0_primary": r4["t_end_h"],
-            "P4_S3_chi1_alt": s4["chi_closure"]["S3_chi1_h"],
-            "chi_closure_diff_rel": s4["chi_closure"]["diff_rel"]},
+            "P3": r3["t_end_h"],
+            "P4_lagrange_primary": r4["t_end_h"],
+            "P4_euler_chi0": s4["crosscheck"]["euler_chi0_h"],
+            "P4_t01_lagrange": s4["lagrange_2x2"]["t01"],
+            "P4_interaction_h": s4["lagrange_2x2"]["interaction_h"],
+            "crosscheck_diff_rel": s4["crosscheck"]["diff_rel"]},
         "all_pass": bool(all_pass),
     }
     (P.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
