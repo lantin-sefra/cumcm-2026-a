@@ -53,34 +53,25 @@ $3$~h 只是报表窗口：沿用正式配置，同一次求解一直推进到�
 而是水分从芯部迁移到表面的内部阻力。这也解释了题目所述烘干需持续两三天的量级。
 
 与问题一相比，中心含水率在 $3$~h 内下降了 $0.78$~kg/kg，而问题一在 $0.5$~h 内
-几乎未动。图~\ref{fig:q2_profiles} 给出本问剖面的演化形态。
+几乎未动。本问剖面与同一时刻的两问增量对照合见图~\ref{fig:q2_profiles}
+与图~\ref{fig:q12_contrast}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_q2_profiles.pdf}
+  \includegraphics[width=0.86\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q2_profiles.pdf}
   \caption{问题二温度与含水率的径向剖面}
   \label{fig:q2_profiles}
-\end{figure}
-
-温度剖面在约 $2$~h 之后已趋于平坦，各位置之差不足 $1~^\circ$C；含水率剖面则持续下移并
-逐渐由「仅表层弯折」变为「整体倾斜」，说明水分下降已推进到可观深度而非局限于表层。
-两个面板的时间尺度差异再次印证前段的判断：温度场先达到准稳态，水分场在此之后才是主角。
-与问题一预热阶段「水分变化限于外层窄带」相比，含水率的可见变化区已扩展到全域。
-这一点需要在同一时刻上比较才能确认，见图~\ref{fig:q12_contrast}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.78\textwidth,height=0.42\textheight,keepaspectratio]{../figures/fig_q12_contrast.pdf}
+  \vspace{0.5em}
+  \includegraphics[width=0.86\textwidth,height=0.34\textheight,keepaspectratio]{../figures/fig_q12_contrast.pdf}
   \caption{问题一与问题二在 $t=1800$~s 的增量对比}
   \label{fig:q12_contrast}
 \end{figure}
 
-图中取同一时刻 $t=1800$~s 背靠背比较两问的温升与含水率降幅。温升的差异始终在数摄氏度量级，
-而含水率降幅在中心处相差近一个量级（$1.0\times10^{-5}$ 对 $6.6\times10^{-5}$~kg/kg）；
-表面处则出现符号反转：问题一的表面降幅 $1.039$~kg/kg 反而大于问题二的
-$0.901$~kg/kg。这一「内部放大、表面反转」的格局说明物性关系的更换主要改写了水分方程的
-内部输运能力，而不是表面的传质条件——表面通量由 $h_m$ 与表面浓度差决定，两问的 $h_m$ 相同，
-问题二表面失水略少恰恰因为内部补水更快、表面浓度维持得更高。
+图~\ref{fig:q2_profiles} 中温度剖面约 $2$~h 后趋于平坦，含水率由表层弯折转为整体倾斜。
+图~\ref{fig:q12_contrast} 取 $t=1800$~s 比较温升与含水率降幅：温升差在数摄氏度，
+中心含水率降幅相差近一个量级（$1.0\times10^{-5}$ 对 $6.6\times10^{-5}$~kg/kg），
+表面则反转（问题一 $1.039$ 对问题二 $0.901$~kg/kg）。物性更换主要改写了内部输运，
+而非表面传质：$h_m$ 相同，问题二内部补水更快，表面浓度维持更高。
 
 \subsection{耦合关系的实际表现}
 
