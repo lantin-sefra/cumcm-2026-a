@@ -3,6 +3,7 @@
 % cumcmthesis 不是组委会指定的唯一 TeX 模板。
 % 电子版提交使用 withoutpreface 去掉封面编号页，bwprint 黑白打印
 \documentclass[withoutpreface,bwprint]{cumcmthesis}
+\setCJKmainfont{SimSun}[AutoFakeBold]
 
 % === 额外宏包（cumcmthesis 已内置 amsmath/graphicx/booktabs/listings/hyperref/tabularx/longtable 等）===
 \usepackage[framemethod=TikZ]{mdframed}
@@ -24,7 +25,7 @@
 % === 代码高亮设置 ===
 % cls 未设置等宽字体，\ttfamily 落到 Latin Modern Mono，它缺希腊字母/箭头/数学算符，
 % 附录代码注释里的 ξ χ λ ρ Σ ∫ 等会整批丢字。改用 Consolas（覆盖除下列 6 个以外的全部字符）。
-\setmonofont{Consolas}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{Liberation Mono}}
 \lstset{
     language=Python,
     basicstyle=\footnotesize\ttfamily,
@@ -39,7 +40,7 @@
 }
 % Consolas 仍缺 6 个字符。listings 的 literate 只能匹配码位 $\leq$255，对三字节 UTF-8 无效，
 % 故用 \newunicodechar 兜底（cls 已加载该宏包）。℃ 映射为 $^\circ$C，与正文既有写法一致。
-\newfontfamily\mhsymfont{Segoe UI Symbol}
+\IfFontExistsTF{Segoe UI Symbol}{\newfontfamily\mhsymfont{Segoe UI Symbol}}{\newfontfamily\mhsymfont{Noto Sans Symbols2}}
 \newunicodechar{⇒}{\ensuremath{\Rightarrow}}
 \newunicodechar{∈}{\ensuremath{\in}}
 \newunicodechar{≪}{\ensuremath{\ll}}
@@ -85,6 +86,10 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{4}
+\setlength{\abovecaptionskip}{0.45em}
+\setlength{\belowcaptionskip}{0.12em}
+\setlength{\intextsep}{8pt plus 2pt minus 4pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 3pt}
 \begin{document}
 
 \maketitle
@@ -152,6 +157,8 @@ $\chi=0$ 替代闭合为 $52.6476$~h，两者相差 $1.5607$~h（$3.0550\%$）�
 % === AI 工具使用声明（自动插入）===
 \clearpage
 \input{sections/Z_ai_disclosure}
+\vspace{-0.75em}
+\setlength{\bibsep}{0.35em plus 0.08em minus 0.08em}
 \bibliography{references}
 \label{mh:body-end}
 
