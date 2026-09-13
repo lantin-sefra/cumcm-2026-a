@@ -39,8 +39,7 @@
 \end{equation}
 
 其中 $h=25$~W/(m$^2\cdot$K)、$h_m=8\times10^{-7}$~m/s 为题给的对流换热与对流传质系数。
-按第三类边界建模而不用第一类，理由已在问题分析中给出：两个毕奥数均为 $O(1)$，
-表面既非温度受控也非阻力可忽略，实测条件下的表面值必须由内外阻力共同决定\upcite{Yilbas2003}。
+按第三类边界建模而不用第一类，理由见问题一的分析\upcite{Yilbas2003}。
 轴心处由几何对称性给出零通量条件
 
 \begin{equation}\label{eq:bc_center}
@@ -71,9 +70,8 @@ $50.165~^\circ$C 与 $0.04986$~kg/kg 仅为附件 1 末采样点。两条驱动�
   \label{fig:input_chamber}
 \end{figure}
 
-空气温度自 $28~^\circ$C 快速抬升，$1.37$~h 已达 $49~^\circ$C，峰值 $50.246~^\circ$C
-出现在 $2.95$~h，此后基本不再变化；含湿量峰值为 $0.05025$~kg/kg。稳态外推段的存在使
-问题二至问题四的长时程求解具有明确的边界驱动：进入稳态外推段后药材内部的继续变化只由内部
+空气温度自 $28~^\circ$C 快速抬升后进入平台，含湿量同步趋于稳定。稳态外推段使
+问题二至问题四的长时程求解具有明确的边界驱动：进入该段后药材内部的继续变化只由内部
 扩散阻力决定，而不再由环境变化驱动。这一点在后文解释干燥速率为何全程单调衰减时会用到。
 
 \subsection{物性关系与由此决定的数学类型}
@@ -150,7 +148,7 @@ $r_i$，表面控制体是半宽圆环。若照搬直角坐标下的等体积划
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.86\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_cylinder_cv.pdf}
+  \includegraphics[width=0.60\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_cylinder_cv.pdf}
   \caption{圆柱径向有限体积的控制体划分}
   \label{fig:cylinder_cv}
 \end{figure}
@@ -178,39 +176,23 @@ $\Delta t\le\Delta r^2/(2\alpha)$ 一类限制，本题热扩散率量级下这�
 式~\eqref{eq:implicit_fv} 的每一行只涉及 $i-1$、$i$、$i+1$ 三个未知量，
 逐行装配即得三对角系统，可用 Thomas 消元在 $O(N)$ 内求解\upcite{DallOsso2004}。
 界面输运系数取相邻结点的算术平均 $\Gamma_{i+1/2}=\tfrac12(\Gamma_i+\Gamma_{i+1})$。
-对照图~\ref{fig:fv_stencil} 中的两时间层模板可以看清，新层的三个结点同时进入同一条方程，
-这正是全隐式格式无条件稳定的来源。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.96\textwidth,height=0.8\textheight,keepaspectratio]{../figures/tikz_fv_stencil.pdf}
-  \caption{全隐式有限体积的两时间层耦合模板}
-  \label{fig:fv_stencil}
-\end{figure}
-
-图中新时间层三个结点同时未知、旧层只有同一结点进入右端项，故系数矩阵每行恰有三个非零元。
+新时间层三个结点同时未知、旧层只有同一结点进入右端项，故系数矩阵每行恰有三个非零元。
 装配所得系数满足 $a_i,c_i\le 0$ 且 $b_i>|a_i|+|c_i|$，即严格对角占优。
 这是该格式不产生非物理振荡的代数依据，也是后文含水率剖面始终保持单调有序的原因。
 
-两个场的耦合按固定次序的算子分裂处理。一个时间步内依次完成：由旧层的 $(C^n,T^n)$ 计算
-$\rho$、$c_p$、$k$；隐式求解温度得 $T^{n+1}$；由 $(C^n,T^{n+1})$ 计算扩散系数；
-隐式求解含水率得 $C^{n+1}$；对新含水率场施加下界以防非物理负值。这一次序不可交换：
-若在求解温度之前计算扩散系数，该系数就退化为由旧温度决定，温度对传质的促进作用被人为削弱。
+两个场的耦合按固定次序的算子分裂处理。一个时间步内依次完成：
+（1）由旧层的 $(C^n,T^n)$ 计算 $\rho$、$c_p$、$k$；
+（2）隐式求解温度得 $T^{n+1}$；
+（3）由 $(C^n,T^{n+1})$ 计算扩散系数；
+（4）隐式求解含水率得 $C^{n+1}$；
+（5）对新含水率场施加下界以防非物理负值。
+这一次序不可交换：若在求解温度之前计算扩散系数，该系数就退化为由旧温度决定，
+温度对传质的促进作用被人为削弱。
 随后以 Picard 迭代复核——用新层场重算物性并重解，直至相邻两次迭代的场变化按绝对值
 低于 $10^{-6}~^\circ$C（温度）与 $10^{-8}$~kg/kg（含水率）——
-以消除分裂本身引入的滞后\upcite{Fromme1997}。上述次序与迭代关系的数据流向汇总于
-图~\ref{fig:pipeline}。
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.96\textwidth,height=0.8\textheight,keepaspectratio]{../figures/fig_pipeline.pdf}
-  \caption{单个时间步内的求解流程}
-  \label{fig:pipeline}
-\end{figure}
-
-图中左侧回路为 Picard 复核、右侧回路为时间推进，两者分工不同。终止判据只在 Picard
-收敛之后检查，避免用尚未收敛的中间场触发停机判定。四问的实际计算中 Picard 迭代最多
-$3$ 次即达到上述收敛标准，说明所选时间步长下分裂误差很小；
+以消除分裂本身引入的滞后\upcite{Fromme1997}。
+终止判据只在 Picard 收敛之后检查，避免用尚未收敛的中间场触发停机判定。
+四问的实际计算中 Picard 迭代最多 $3$ 次即达到上述收敛标准，说明所选时间步长下分裂误差很小；
 下界截断在四问中均未被触发，即含水率场自始至终保持为正。
 
 交付计算按各问取正式配置：问题一为 $N=160$、$\Delta t=0.125$~s，
