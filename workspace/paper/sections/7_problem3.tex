@@ -6,10 +6,10 @@
 
 干燥过程中含水率沿半径始终不均匀。由表~\ref{tab:p2_C} 可见同一时刻中心最高、表面最低，
 两者可相差数倍。要保证「药材内部含水率降到 $0.15$~kg/kg 以下」，
-必须要求最难干的位置也达标，故把达标时刻定义为逐点最大含水率首次低于阈值的时刻
+必须要求最难干的位置也达标，故把达标时刻定义为逐点最大含水率首次达到阈值的时刻
 
 \begin{equation}\label{eq:tend}
-t_{\rm end}=\min\Bigl\{\,t>0 \;\Bigm|\; \max_{0\le r\le R} C(r,t) < C_{\rm th}\,\Bigr\},
+t_{\rm end}=\inf\Bigl\{\,t>0 \;\Bigm|\; \max_{0\le r\le R} C(r,t) \le C_{\rm th}\,\Bigr\},
 \qquad C_{\rm th}=0.15~\mathrm{kg/kg}.
 \end{equation}
 
